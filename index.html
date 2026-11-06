@@ -94,14 +94,38 @@ header .sp{flex:1}
 /* editor */
 #ed{position:fixed;inset:0;z-index:10;display:none;background:rgba(3,10,10,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 #ed.open{display:block}
-#ed .sheet{position:absolute;left:0;right:0;bottom:0;top:calc(env(safe-area-inset-top) + 24px);max-width:560px;margin:0 auto;border-radius:28px 28px 0 0;display:flex;flex-direction:column;animation:up .5s cubic-bezier(.2,.9,.25,1.05);background:linear-gradient(160deg,rgba(30,44,44,.78),rgba(14,20,20,.86))}
+#ed .sheet{position:absolute;left:0;right:0;bottom:0;max-height:calc(100% - env(safe-area-inset-top) - 16px);max-width:560px;margin:0 auto;border-radius:28px 28px 0 0;display:flex;flex-direction:column;animation:up .5s cubic-bezier(.2,.9,.25,1.05);background:linear-gradient(160deg,rgba(30,44,44,.78),rgba(14,20,20,.86))}
 @keyframes up{from{transform:translateY(100%)}}
 .edtop{display:flex;align-items:center;gap:10px;padding:18px 18px 10px}
 .edtop .ttl{font-size:20px;font-weight:600;flex:1}
+.edtop .ttl small{font-size:15px;font-weight:500;color:var(--mut)}
+.grab{width:38px;height:5px;border-radius:3px;background:rgba(255,255,255,.25);margin:8px auto 0;flex:none}
+.edtop:has(.txtbtn+.ttl) .ttl{text-align:center;font-size:17px}
+.txtbtn{min-height:44px;min-width:64px;padding:0 10px;border:0;border-radius:12px;background:transparent;color:var(--mut);font-family:inherit;font-size:17px}
+.txtbtn.strong{color:var(--acc2);font-weight:700}
+.r2{display:flex;gap:8px;margin-bottom:12px}
+.r2 .big{flex:1;min-width:0;font-size:18px;font-weight:600;padding:13px 14px}
+.r2 #ft{flex:0 0 112px;padding:13px 12px}
+.daysel{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:12px}
+.daysel button{min-height:44px;padding:0;border-radius:12px;border:1px solid var(--edge);background:rgba(255,255,255,.05);color:var(--txt);font-family:inherit;font-size:13px}
+.daysel button.on{background:var(--acc);border-color:transparent;color:#1a0c06;font-weight:700}
+.daysel button.ok{background:rgba(143,209,158,.22);border-color:rgba(143,209,158,.55)}
+.daysel button:disabled{opacity:.3}
+.more{width:100%;display:flex;align-items:center;gap:10px;text-align:left;min-height:52px;padding:10px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:var(--txt);font-family:inherit;font-size:15px}
+.more span:first-child{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.more small{font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.more .ch{transition:transform .3s;color:var(--mut)}
+.more.open .ch{transform:rotate(180deg)}
+.morebd{display:none;padding-top:4px}
+.more.open+.morebd{display:block;animation:enter .4s cubic-bezier(.2,.9,.25,1.1)}
+.acts{display:flex;gap:8px;margin-top:14px}
+.rowbtn{flex:1;min-height:48px;padding:0 12px;border-radius:14px;border:1px solid var(--edge);background:rgba(255,255,255,.06);color:var(--txt);font-family:inherit;font-size:15px;white-space:nowrap}
+.rowbtn.del{color:#ff9d8a;border-color:rgba(255,157,138,.3)}
+.rowbtn:disabled{opacity:.35}
 .chips{display:flex;gap:6px;padding:4px 18px 12px;overflow-x:auto;scrollbar-width:none}
 .chip{flex:none;padding:9px 13px;border-radius:12px;border:1px solid var(--edge);background:rgba(255,255,255,.06);color:var(--txt);font-family:inherit;font-size:15px}
 .chip.on{background:var(--acc);color:#1a0c06;border-color:transparent;font-weight:600}
-.edbody{flex:1;overflow-y:auto;padding:4px 18px 20px;-webkit-overflow-scrolling:touch}
+.edbody{flex:1;overflow-y:auto;padding:4px 18px calc(env(safe-area-inset-bottom) + 20px);-webkit-overflow-scrolling:touch}
 .blk{padding:14px;margin-bottom:12px;border-radius:18px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);animation:enter .45s cubic-bezier(.2,.9,.25,1.1) both}
 .blk .r{display:flex;gap:8px;margin-bottom:8px}
 .blk .ctl{display:flex;gap:6px;justify-content:flex-end}
@@ -158,20 +182,71 @@ textarea{resize:vertical;min-height:64px;line-height:1.4}
 .sibs a{color:var(--mut);font-size:14px;padding:10px 14px;border-radius:12px;border:1px solid var(--edge);text-decoration:none;background:rgba(255,255,255,.05)}
 
 /* ---------- week / calendar ---------- */
-.wk{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 8px;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:none}
+.wk{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 8px;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:none;align-items:flex-start}
 .wk::-webkit-scrollbar{display:none}
-.col{flex:0 0 78%;scroll-snap-align:center;padding:14px 12px;border-radius:22px}
+.wk.dragging{scroll-snap-type:none}
+.col{flex:0 0 76%;scroll-snap-align:center;padding:10px 10px 12px;border-radius:22px}
 .col.today{border-color:rgba(217,119,87,.6)}
-.col .ch{display:flex;justify-content:space-between;align-items:baseline;padding:2px 6px 10px}
-.col .ch b{font-size:18px}
-.col .ch span{font-size:13px;color:var(--mut)}
-.bk{display:flex;align-items:center;gap:10px;padding:11px 12px;margin-bottom:7px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);font-size:15px}
-.bk .tg{width:8px;height:28px;border-radius:4px;flex:none}
-.bk .bt{flex:1;min-width:0}
-.bk .bt div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bk .bt small{color:var(--mut);font-size:12px}
-.addb{width:100%;padding:12px;border-radius:14px;border:1.5px dashed rgba(255,255,255,.22);background:transparent;color:var(--mut);font-family:inherit;font-size:15px}
+.col .ch{display:flex;align-items:center;gap:8px;padding:0 0 8px 8px}
+.col .ch b{font-size:18px;flex:1}
+.col .ch .cnt{font-size:13px;color:var(--mut);min-width:18px;text-align:right}
+.ibtn.dm{width:44px;height:44px;font-size:20px;border-color:transparent;background:rgba(255,255,255,.06)}
+.dl{position:relative;display:flex;flex-direction:column;gap:6px;min-height:52px}
+.bk{display:flex;align-items:center;gap:10px;min-height:50px;padding:6px 12px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);font-size:15px;-webkit-touch-callout:none;touch-action:manipulation}
+.bk .tg{width:6px;height:24px;border-radius:3px;flex:none}
+.bk .bn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk .bl{flex:none;font-size:11px;padding:2px 6px;border-radius:8px;background:rgba(255,255,255,.1);color:var(--mut)}
+.bk .bt{flex:none;max-width:38%;font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.addb{width:100%;min-height:48px;margin-top:6px;padding:12px;border-radius:14px;border:1.5px dashed rgba(255,255,255,.22);background:transparent;color:var(--mut);font-family:inherit;font-size:15px}
+.qa{display:flex;gap:6px;margin-top:6px;animation:enter .35s cubic-bezier(.2,.9,.25,1.1)}
+.qa .qn{flex:1;min-width:0}.qa .qt{flex:0 0 78px}
+.seg{display:flex;gap:4px;padding:4px;border-radius:16px;margin:0 0 12px}
+.seg button{flex:1;min-height:44px;border:0;border-radius:12px;background:transparent;color:var(--mut);font-family:inherit;font-size:15px;font-weight:600}
+.seg button.on{background:rgba(255,255,255,.15);color:var(--txt);box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.seg.mini{background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.08);margin-bottom:10px}
+.seg.mini button{font-size:14px;min-height:40px}
+/* week grid */
+.wcal{margin:0 -8px;padding:6px 5px 8px;border-radius:22px}
+.cg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;align-items:start}
+.cday{display:flex;flex-direction:column;min-width:0;border-radius:14px;padding:0 2px 2px}
+.cday.today{background:rgba(217,119,87,.1);box-shadow:inset 0 0 0 1px rgba(217,119,87,.5)}
+.cdh{height:46px;border:0;background:transparent;color:var(--txt);font-family:inherit;font-size:16px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:10px}
+.cdh small{font-size:10px;font-weight:500;color:var(--mut)}
+.cday.today .cdh{color:var(--acc2)}
+.cday .dl{gap:3px;min-height:40px}
+.pl{border-radius:8px;padding:4px 3px 5px 5px;border-left:3px solid var(--c);font-size:11px;line-height:1.18;min-height:40px;-webkit-touch-callout:none;touch-action:manipulation}
+.pl small{display:block;font-size:9.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:clip;margin-bottom:1px}
+.pl span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;word-break:break-word}
+.cadd{height:40px;margin-top:3px;border-radius:9px;border:1.5px dashed rgba(255,255,255,.18);background:transparent;color:var(--mut);font-family:inherit;font-size:18px}
+/* drag */
+.ghost{position:fixed!important;z-index:40;margin:0!important;pointer-events:none;transition:transform .2s cubic-bezier(.2,.9,.25,1.3),box-shadow .2s,opacity .2s;will-change:left,top,transform}
+.ghost.lift{transform:scale(1.07) rotate(-1.6deg);box-shadow:0 24px 44px -10px rgba(0,0,0,.75),0 0 0 1.5px rgba(217,119,87,.75)}
+.bk.ghost{background:rgba(38,58,56,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.pl.ghost{background-color:rgba(38,58,56,.94)!important;box-shadow:0 0 0 1px rgba(255,255,255,.2)}
+.ghost.settle{transition:left .18s cubic-bezier(.2,.9,.25,1),top .18s cubic-bezier(.2,.9,.25,1),transform .18s,box-shadow .18s}
+.ghost.to-del{transform:scale(.8) rotate(-4deg);opacity:.6;box-shadow:0 0 0 2px #E5484D}
+.ghost.to-copy{transform:scale(.9);box-shadow:0 0 0 2px var(--ok)}
+.ghost.gone{transform:scale(.3);opacity:0;transition:transform .2s,opacity .2s}
+.ph{background:rgba(255,255,255,.03)!important;border:1.5px dashed rgba(255,255,255,.35)!important;box-shadow:none!important}
+.ph>*{opacity:0}
+.ph.gone{display:none}
+.landed{animation:landed .9s ease-out}
+@keyframes landed{0%{box-shadow:0 0 0 2px rgba(217,119,87,.9),0 0 22px rgba(217,119,87,.6)}100%{box-shadow:0 0 0 0 rgba(217,119,87,0)}}
+body.dragging{cursor:grabbing}
+body.dragging .tabs{opacity:0;pointer-events:none}
+.tabs{transition:opacity .25s}
+.zones{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 14px);transform:translate(-50%,30px);opacity:0;pointer-events:none;z-index:6;display:flex;gap:6px;padding:6px;border-radius:22px;width:min(420px,calc(100vw - 32px));transition:all .3s cubic-bezier(.2,.9,.25,1.2)}
+.zones.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.zones [data-zone]{flex:1;min-height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:600;color:var(--mut);background:rgba(255,255,255,.06);transition:all .2s}
+.zones [data-zone] b{font-size:18px}
+.zones [data-zone=copy].hot{background:rgba(143,209,158,.28);color:var(--txt);transform:scale(1.04)}
+.zones [data-zone=del].hot{background:rgba(229,72,77,.4);color:var(--txt);transform:scale(1.04)}
+.snack{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 84px);transform:translate(-50%,30px);opacity:0;pointer-events:none;z-index:30;display:flex;align-items:center;gap:6px;padding:4px 4px 4px 16px;border-radius:16px;font-size:15px;max-width:calc(100vw - 24px);transition:all .4s cubic-bezier(.2,.9,.25,1.2);background:linear-gradient(140deg,rgba(40,56,56,.92),rgba(20,28,28,.94))}
+.snack.on{transform:translate(-50%,0);opacity:1;pointer-events:auto}
+.snack span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;padding:10px 0}
+.snack button{flex:none;min-height:44px;padding:0 14px;border:0;border-radius:12px;background:rgba(217,119,87,.2);color:var(--acc2);font-family:inherit;font-size:15px;font-weight:600}
 .cal{padding:16px 14px}
+.h2+.cal{margin-top:0}
 .cal .mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .cal .mh b{font-size:17px}
 .cal .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
@@ -180,8 +255,9 @@ textarea{resize:vertical;min-height:64px;line-height:1.4}
 .cal .dd.fut{opacity:.35}
 .cal .dd.tdy{outline:1.5px solid var(--acc)}
 .cal .dd i{position:absolute;bottom:4px;width:5px;height:5px;border-radius:50%;background:var(--acc)}
-.tagsel{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
-.tagsel button{padding:8px 11px;border-radius:11px;border:1px solid var(--edge);background:rgba(255,255,255,.05);color:var(--txt);font-family:inherit;font-size:14px;display:flex;align-items:center;gap:6px}
+.tagsel{display:flex;gap:6px;margin:0 -18px 6px;padding:0 18px 6px;overflow-x:auto;scrollbar-width:none}
+.tagsel::-webkit-scrollbar{display:none}
+.tagsel button{flex:none;min-height:40px;padding:8px 12px;border-radius:11px;border:1px solid var(--edge);background:rgba(255,255,255,.05);color:var(--txt);font-family:inherit;font-size:14px;display:flex;align-items:center;gap:6px}
 .tagsel button i{width:8px;height:8px;border-radius:50%}
 .tagsel button.on{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.4)}
 select{width:100%;font-family:inherit;font-size:16px;color:var(--txt);background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px}
@@ -579,28 +655,45 @@ root.addEventListener("click",e=>{
   else if(a==="tog"){S.open[t.dataset.s]=!S.open[t.dataset.s];render(false)}
   else if(a==="ex"){const ek="tora-ex-"+dk,ex=ld(ek,{}),k=t.dataset.k;ex[k]=!ex[k];sv(ek,ex);t.classList.toggle("on",!!ex[k]);buzz(ex[k]?[8,30,8]:5)}
   else if(a==="peek"){t.animate([{transform:"translateX(0)"},{transform:"translateX(8px)"},{transform:"translateX(-5px)"},{transform:"translateX(0)"}],{duration:420,easing:"ease-out"})}
-  else if(a==="blk")openBlock(+t.dataset.wd,t.dataset.id);
-  else if(a==="addb")openBlock(+t.dataset.wd,null);
+  else if(a==="blk")openBlock(+t.dataset.wd,t.dataset.bid);
+  else if(a==="qadd")quickAdd(+t.dataset.wd,t);
+  else if(a==="daymenu")openDay(+t.dataset.wd);
+  else if(a==="wkmode"){S.wkMode=t.dataset.m;sv("tora-wkmode",S.wkMode);render(true)}
   else if(a==="rules")openRules();
   else if(a==="cal"){S.calMonth=new Date(S.calMonth.getFullYear(),S.calMonth.getMonth()+(+t.dataset.d),1);render(false)}
 });
 
-/* ---------- Εβδομάδα: day columns + month calendar ---------- */
+/* ---------- Εβδομάδα: columns or week grid, drag & drop, month calendar ---------- */
+/* Two views of the same template. «Στήλες»: one wide column per day in a
+   horizontal strip. «Ημερολόγιο»: all seven days side by side as tag pills.
+   In both, long-press a step to lift it and drop it anywhere (any day, any
+   position), or onto the copy / trash zones that replace the tab bar. */
+S.wkMode=ld('tora-wkmode','cols');
+const GEN=["της Κυριακής","της Δευτέρας","της Τρίτης","της Τετάρτης","της Πέμπτης","της Παρασκευής","του Σαββάτου"];
+const LETTER=["Κ","Δ","Τ","Τ","Π","Π","Σ"];
+function tagc(t){return (TAGS[t]||TAGS.other)[1]}
+function dayIn(wd){return (wd===6?"στο ":"στην ")+DAYS[wd]}
+function chipHtml(b){return '<div class="bk tap" data-act="blk" data-bid="'+b.id+'" data-wd="'+b.weekday+'"><span class="tg" style="background:'+tagc(b.tag)+'"></span><span class="bn">'+esc(b.n)+'</span>'+(b.list&&b.list.length?'<span class="bl">'+b.list.length+'</span>':'')+'<span class="bt">'+esc(b.t)+'</span></div>'}
+function pillHtml(b){const c=tagc(b.tag);return '<div class="pl tap" data-act="blk" data-bid="'+b.id+'" data-wd="'+b.weekday+'" style="--c:'+c+';background:'+c+'30"><small>'+esc(b.t||"·")+'</small><span>'+esc(b.n)+'</span></div>'}
 function renderWeek(animate){
-  const td=today().getDay();
-  let h=header("Εβδομάδα · πάτα ένα βήμα για αλλαγή");
-  h+='<div class="wk" id="wk">'+ORDER.map((wd,ci)=>{
-    const bl=dayBlocks(wd);
-    return '<div class="glass col'+(wd===td?" today":"")+(animate?" enter":"")+'" style="animation-delay:'+(ci*40)+'ms"><div class="ch"><b>'+DAYS[wd]+'</b><span>'+bl.length+' βήματα</span></div>'+
-      bl.map(b=>'<div class="bk tap" data-act="blk" data-wd="'+wd+'" data-id="'+b.id+'"><span class="tg" style="background:'+(TAGS[b.tag]||TAGS.other)[1]+'"></span><div class="bt"><div>'+esc(b.n)+'</div><small>'+esc(b.t)+'</small></div></div>').join("")+
-      '<button class="addb tap" data-act="addb" data-wd="'+wd+'">+ Βήμα</button></div>';
-  }).join("")+'</div>';
+  const td=today().getDay(),cal=S.wkMode==="cal",old=document.getElementById("wk"),keep=!animate&&old?old.scrollLeft:null;
+  let h=header("Εβδομάδα · κράτα και σύρε");
+  h+='<div class="seg glass"><button class="tap'+(cal?"":" on")+'" data-act="wkmode" data-m="cols">Στήλες</button><button class="tap'+(cal?" on":"")+'" data-act="wkmode" data-m="cal">Ημερολόγιο</button></div>';
+  if(cal){
+    h+='<div class="glass wcal'+(animate?" enter":"")+'"><div class="cg">'+ORDER.map(wd=>{const bl=dayBlocks(wd);
+      return '<div class="cday'+(wd===td?" today":"")+'" data-dcol="'+wd+'"><button class="cdh tap" data-act="daymenu" data-wd="'+wd+'" aria-label="'+DAYS[wd]+'">'+LETTER[wd]+'<small class="cnt">'+bl.length+'</small></button><div class="dl" data-wd="'+wd+'">'+bl.map(pillHtml).join("")+'</div><button class="cadd tap" data-act="qadd" data-wd="'+wd+'" aria-label="Νέο βήμα '+DAYS[wd]+'">+</button></div>'}).join("")+'</div></div>';
+  }else{
+    h+='<div class="wk" id="wk">'+ORDER.map((wd,ci)=>{const bl=dayBlocks(wd);
+      return '<div class="glass col'+(wd===td?" today":"")+(animate?" enter":"")+'" style="animation-delay:'+(ci*40)+'ms" data-dcol="'+wd+'"><div class="ch"><b>'+DAYS[wd]+'</b><span class="cnt">'+bl.length+'</span><button class="ibtn dm tap" data-act="daymenu" data-wd="'+wd+'" aria-label="Επιλογές για '+DAYS[wd]+'">⋯</button></div><div class="dl" data-wd="'+wd+'">'+bl.map(chipHtml).join("")+'</div><button class="addb tap" data-act="qadd" data-wd="'+wd+'">+ Βήμα</button></div>'}).join("")+'</div>';
+  }
   h+=calendarHtml();
   h+='<div class="glass sec open" style="margin-top:14px"><div class="hd tap" data-act="rules"><span>Κανόνες</span><span>✎</span></div><div class="bd">'+S.rules.map(r=>'<div class="rule">'+ruleHtml(r)+"</div>").join("")+"</div></div>";
   root.innerHTML=h;
-  const wk=document.getElementById("wk"),col=wk.children[ORDER.indexOf(td)];
-  if(col) wk.scrollLeft=col.offsetLeft-(wk.clientWidth-col.offsetWidth)/2;
+  const wk=document.getElementById("wk");
+  if(wk){ if(keep!=null) wk.scrollLeft=keep; else { const col=wk.children[ORDER.indexOf(td)]; if(col) wk.scrollLeft=col.offsetLeft-(wk.clientWidth-col.offsetWidth)/2; } }
 }
+function updateCounts(){document.querySelectorAll("[data-dcol]").forEach(c=>{const n=c.querySelectorAll(".dl>[data-bid]:not(.gone)").length,e=c.querySelector(".cnt");if(e)e.textContent=n})}
+function flash(id){const n=document.querySelector('[data-bid="'+id+'"]');if(n){n.classList.add("landed");setTimeout(()=>n.classList.remove("landed"),900)}}
 function calendarHtml(){
   if(!S.calMonth) S.calMonth=new Date(today().getFullYear(),today().getMonth(),1);
   const m=S.calMonth,first=new Date(m),last=new Date(m.getFullYear(),m.getMonth()+1,0),tdk=key(today());
@@ -613,45 +706,238 @@ function calendarHtml(){
     const bg=ev.length?'background:rgba(217,119,87,'+(.12+pct*.6).toFixed(2)+')':'';
     g+='<div class="dd tap'+(fut?" fut":"")+(dk===tdk?" tdy":"")+'" style="'+bg+'" title="'+Math.round(pct*100)+'%">'+dd+'</div>';
   }
-  return '<div class="glass cal" style="margin-top:14px"><div class="mh"><button class="ibtn tap" data-act="cal" data-d="-1">‹</button><b>'+MONTHS[m.getMonth()]+" "+m.getFullYear()+'</b><button class="ibtn tap" data-act="cal" data-d="1">›</button></div><div class="grid">'+g+'</div></div>';
+  return '<div class="h2">Ολοκλήρωση</div><div class="glass cal"><div class="mh"><button class="ibtn tap" data-act="cal" data-d="-1">‹</button><b>'+MONTHS[m.getMonth()]+" "+m.getFullYear()+'</b><button class="ibtn tap" data-act="cal" data-d="1">›</button></div><div class="grid">'+g+'</div></div>';
 }
 
-/* ---------- block editor sheet ---------- */
+/* ---------- undo: snapshot whole days, put them back ---------- */
+function snap(wds){const set=new Set(wds.map(Number));return{wds:[...set],rows:S.blocks.filter(b=>set.has(b.weekday)).map(b=>JSON.parse(JSON.stringify(b)))}}
+function restore(sn){
+  const set=new Set(sn.wds),keepIds=new Set(sn.rows.map(r=>r.id));
+  const del=S.blocks.filter(b=>set.has(b.weekday)&&!keepIds.has(b.id)).map(b=>b.id);
+  const moved=S.blocks.filter(b=>keepIds.has(b.id)&&!set.has(b.weekday)).map(b=>b.weekday);
+  S.blocks=S.blocks.filter(b=>!set.has(b.weekday)&&!keepIds.has(b.id)).concat(sn.rows.map(r=>Object.assign({},r)));
+  saveDays(sn.wds.concat(moved),del); render(false); buzz(8);
+}
+function cloneBlock(b,extra){return Object.assign({},b,{id:uuid(),list:b.list?JSON.parse(JSON.stringify(b.list)):null},extra||{})}
+function copyDay(from,to,mode){
+  const sn=snap([to]),del=mode==="replace"?dayBlocks(to).map(b=>b.id):[];
+  if(del.length) S.blocks=S.blocks.filter(b=>b.weekday!==to);
+  const base=dayBlocks(to).length; dayBlocks(from).forEach((b,i)=>S.blocks.push(cloneBlock(b,{weekday:to,pos:base+i})));
+  saveDays([to],del); return sn;
+}
+/* A rough tag from the title, so quick-add needs no extra taps. */
+function guessTag(n){
+  const s=String(n).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+  const R=[["gym",/γυμν|gym|προπον|τρεξ|τρεχ|ασκησ|κολυμβ/],["sleep",/υπνο|κοιμ/],["partner",/κατεριν/],["pr",/telematica|\bpr\b|κωδικ|code/],["food",/φαγ|φαι|meal|μαγειρ|πρωινο|μεσημεριαν|βραδινο|ψυγει/],["rest",/ξεκουρ|nap|χαλαρ|διαλειμ/],["work",/δουλει|γραφει|work|meeting|συναντ/],["home",/σπιτ|πιατα|reset|καθαρ|ντους|ψωνι|πλυντ|σκουπ/]];
+  for(const [t,re] of R) if(re.test(s)) return t; return "other";
+}
+
+/* ---------- snackbar with Αναίρεση ---------- */
+const snackEl=document.createElement("div");snackEl.className="snack glass";document.body.appendChild(snackEl);
+let snT=null,snUndo=null;
+function snack(msg,undo){snUndo=undo||null;snackEl.innerHTML='<span>'+esc(msg)+'</span>'+(undo?'<button class="tap" data-u>Αναίρεση</button>':'');snackEl.classList.add("on");clearTimeout(snT);snT=setTimeout(hideSnack,undo?6000:2600)}
+function hideSnack(){snackEl.classList.remove("on");snUndo=null}
+snackEl.addEventListener("click",e=>{if(!e.target.closest("[data-u]")||!snUndo)return;const u=snUndo;hideSnack();u();setTimeout(()=>snack("Αναιρέθηκε"),60)});
+
+/* ---------- drag & drop ---------- */
+/* Touch: hold ~250ms without moving to lift (moving earlier = normal scroll).
+   Mouse: lift as soon as it moves. While lifted, touchmove is cancelled so the
+   page doesn't scroll; we scroll the strip/page ourselves near the edges. */
+const LP=250;
+const zones=document.createElement("div");zones.className="zones glass";zones.innerHTML='<div data-zone="copy"><b>⧉</b>Αντίγραφο</div><div data-zone="del"><b>✕</b>Διαγραφή</div>';document.body.appendChild(zones);
+const DR={p:null,on:false,busy:false,sup:0};
+root.addEventListener("pointerdown",e=>{
+  if(S.view!=="week"||DR.on||DR.busy||(e.pointerType==="mouse"&&e.button!==0))return;
+  const it=e.target.closest("[data-bid]");if(!it)return;
+  cancelArm();
+  DR.p={id:e.pointerId,type:e.pointerType,x:e.clientX,y:e.clientY,lx:e.clientX,ly:e.clientY,el:it};
+  if(e.pointerType!=="mouse"){it.classList.add("arming");DR.timer=setTimeout(startDrag,LP)}
+});
+window.addEventListener("pointermove",e=>{
+  if(DR.on){if(e.pointerId!==DR.pid)return;DR.x=e.clientX;DR.y=e.clientY;moveGhost();return}
+  const p=DR.p;if(!p||e.pointerId!==p.id)return;p.lx=e.clientX;p.ly=e.clientY;
+  const d=Math.hypot(e.clientX-p.x,e.clientY-p.y);
+  if(p.type==="mouse"){if(d>6&&(e.buttons&1))startDrag()}else if(d>10)cancelArm();
+});
+window.addEventListener("pointerup",e=>{if(DR.on&&e.pointerId===DR.pid)drop();else cancelArm()});
+window.addEventListener("pointercancel",e=>{if(DR.on&&e.pointerId===DR.pid)abortDrag();else cancelArm()});
+document.addEventListener("touchmove",e=>{if(DR.on&&e.cancelable)e.preventDefault()},{passive:false});
+document.addEventListener("scroll",()=>{if(DR.p&&!DR.on)cancelArm()},true);
+document.addEventListener("contextmenu",e=>{if(e.target.closest&&e.target.closest("[data-bid]"))e.preventDefault()});
+document.addEventListener("click",e=>{if(Date.now()-DR.sup<450){e.stopPropagation();e.preventDefault()}},true);
+function cancelArm(){clearTimeout(DR.timer);if(DR.p&&DR.p.el)DR.p.el.classList.remove("arming");DR.p=null}
+function startDrag(){
+  clearTimeout(DR.timer);const p=DR.p;if(!p||!p.el.isConnected){cancelArm();return}
+  const el=p.el,r=el.getBoundingClientRect();
+  el.classList.remove("arming","pressed");el.querySelectorAll(".rip").forEach(n=>n.remove());
+  const g=el.cloneNode(true);g.classList.add("ghost");g.removeAttribute("data-bid");
+  g.style.width=r.width+"px";g.style.height=r.height+"px";g.style.left=r.left+"px";g.style.top=r.top+"px";
+  document.body.appendChild(g);
+  Object.assign(DR,{on:true,pid:p.id,g,el,ox:p.x-r.left,oy:p.y-r.top,x:p.lx,y:p.ly,zone:null});DR.p=null;
+  el.classList.add("ph");document.body.classList.add("dragging");zones.classList.add("on");
+  const wk=document.getElementById("wk");if(wk)wk.classList.add("dragging");
+  try{el.releasePointerCapture&&el.releasePointerCapture(DR.pid)}catch(x){}
+  buzz(14);ripple(p.lx,p.ly,150,.9);
+  requestAnimationFrame(()=>{g.classList.add("lift");moveGhost()});
+  DR.raf=requestAnimationFrame(tick);
+}
+function moveGhost(){if(DR.g){DR.g.style.left=(DR.x-DR.ox)+"px";DR.g.style.top=(DR.y-DR.oy)+"px"}}
+function tick(){if(!DR.on)return;autoScroll();place();DR.raf=requestAnimationFrame(tick)}
+function autoScroll(){
+  /* Strip: hovering an edge flips one day at a time (dwell, then every 600ms),
+     so you can stop on the day you want. Page: smooth scroll near top/bottom. */
+  const x=DR.x,y=DR.y,E=44,wk=document.getElementById("wk"),now=performance.now();
+  if(wk){const r=wk.getBoundingClientRect(),dir=(y>r.top-40&&y<r.bottom+40)?(x<r.left+E?-1:x>r.right-E?1:0):0;
+    if(!dir){DR.edge=0}else if(DR.edge!==dir){DR.edge=dir;DR.edgeT=now+380}
+    else if(now>=DR.edgeT){DR.edgeT=now+650;const cols=[...wk.children],mid=wk.scrollLeft+wk.clientWidth/2;
+      let ci=0,best=1e9;cols.forEach((c,i)=>{const d=Math.abs(c.offsetLeft+c.offsetWidth/2-mid);if(d<best){best=d;ci=i}});
+      const c=cols[ci+dir];if(c){wk.scrollTo({left:c.offsetLeft-(wk.clientWidth-c.offsetWidth)/2,behavior:"smooth"});buzz(8)}}}
+  const zb=zones.getBoundingClientRect().top,T=70;let v=0;
+  if(y<T)v=-(1-y/T);else if(y>zb-70&&y<zb)v=1-(zb-y)/70;
+  if(v)window.scrollBy(0,v*14);
+}
+function setZone(z){
+  if(z===DR.zone)return;DR.zone=z;
+  zones.querySelectorAll("[data-zone]").forEach(n=>n.classList.toggle("hot",n.dataset.zone===z));
+  DR.g.classList.toggle("to-del",z==="del");DR.g.classList.toggle("to-copy",z==="copy");DR.el.classList.toggle("gone",z==="del");
+  updateCounts();if(z)buzz(10);
+}
+function place(){
+  const x=DR.x,y=DR.y,hit=document.elementFromPoint(x,y);if(!hit)return;
+  const z=hit.closest("[data-zone]");setZone(z?z.dataset.zone:null);if(z)return;
+  const col=hit.closest("[data-dcol]");if(!col)return;
+  const list=col.querySelector(".dl"),lr=list.getBoundingClientRect();
+  let before=null;
+  for(const n of list.children){if(n===DR.el||!n.dataset.bid)continue;if(y<lr.top+n.offsetTop+n.offsetHeight/2){before=n;break}}
+  if(DR.el.parentNode===list&&DR.el.nextElementSibling===before)return;
+  flip([DR.el.parentNode,list],()=>list.insertBefore(DR.el,before));
+  updateCounts();buzz(4);
+}
+/* FLIP: measure, move the placeholder, then glide every other item from where
+   it was — that is the gap "opening" under the finger. */
+function flip(lists,mut){
+  const els=[];new Set(lists).forEach(l=>els.push(...l.children));
+  const a=new Map(els.map(n=>[n,n.getBoundingClientRect()]));
+  els.forEach(n=>n.getAnimations&&n.getAnimations().forEach(x=>x.cancel()));
+  mut();
+  els.forEach(n=>{if(n===DR.el)return;const p=a.get(n),q=n.getBoundingClientRect(),dx=p.left-q.left,dy=p.top-q.top;
+    if(Math.abs(dx)>.5||Math.abs(dy)>.5)n.animate([{transform:"translate("+dx+"px,"+dy+"px)"},{transform:"none"}],{duration:220,easing:"cubic-bezier(.2,.9,.25,1)"})});
+}
+function endDrag(){
+  cancelAnimationFrame(DR.raf);DR.on=false;DR.sup=Date.now();
+  document.body.classList.remove("dragging");zones.classList.remove("on");
+  zones.querySelectorAll(".hot").forEach(n=>n.classList.remove("hot"));
+  const wk=document.getElementById("wk");if(wk)wk.classList.remove("dragging");
+}
+function abortDrag(){endDrag();if(DR.g)DR.g.remove();DR.g=null;render(false)}
+function drop(){
+  const zone=DR.zone,el=DR.el,g=DR.g,id=el.dataset.bid,b=S.blocks.find(x=>x.id===id),x=DR.x,y=DR.y;
+  endDrag();DR.busy=true;DR.g=null;
+  const finish=after=>{g.remove();DR.busy=false;render(false);if(after)after()};
+  if(!b){finish();return}
+  if(zone){
+    g.classList.add("gone");ripple(x,y,240,1.1);buzz([10,40,14]);
+    if(zone==="del"){const sn=snap([b.weekday]);S.blocks=S.blocks.filter(q=>q!==b);saveDays([b.weekday],[id]);
+      setTimeout(()=>finish(()=>snack("Διαγράφηκε: "+b.n,()=>restore(sn))),200)}
+    else{const sn=snap([b.weekday]),c=cloneBlock(b,{pos:b.pos+.5});S.blocks.push(c);saveDays([b.weekday]);
+      setTimeout(()=>finish(()=>{flash(c.id);snack("Αντίγραφο "+dayIn(b.weekday),()=>restore(sn))}),200)}
+    return;
+  }
+  const list=el.parentNode,to=+list.dataset.wd,from=b.weekday;
+  const ids=[...list.children].filter(n=>n.dataset.bid).map(n=>n.dataset.bid);
+  const changed=to!==from||ids.join()!==dayBlocks(to).map(q=>q.id).join();
+  let sn=null;
+  if(changed){sn=snap([from,to]);b.weekday=to;ids.forEach((bid,i)=>{const q=S.blocks.find(k=>k.id===bid);if(q)q.pos=i});saveDays([from,to]);ripple(x,y,220,1.1);buzz([10,40,14])}
+  /* settle: glide the ghost into the slot, then swap in the real item */
+  const r=el.getBoundingClientRect();g.classList.remove("lift");g.classList.add("settle");g.style.left=r.left+"px";g.style.top=r.top+"px";
+  setTimeout(()=>finish(()=>{flash(id);if(changed&&to!==from)snack("Μετακινήθηκε "+dayIn(to),()=>restore(sn))}),190);
+}
+
+/* ---------- quick add ---------- */
+function quickAdd(wd,btn){
+  if(S.wkMode==="cal"||!btn.closest(".col")){openBlock(wd,null,true);return}
+  const col=btn.closest("[data-dcol]"),f=document.createElement("div");f.className="qa";
+  f.innerHTML='<input class="qn" placeholder="Νέο βήμα…" enterkeyhint="done" autocomplete="off" autocapitalize="sentences"><input class="qt" placeholder="Ώρα" enterkeyhint="done" autocomplete="off">';
+  btn.replaceWith(f);const qn=f.querySelector(".qn"),qt=f.querySelector(".qt");qn.focus();
+  const commit=()=>{const n=qn.value.trim();if(!n)return false;
+    const b={id:uuid(),user_id:uid(),weekday:wd,pos:1e6,t:qt.value.trim(),n,h:"",tag:guessTag(n),list:null};
+    S.blocks.push(b);saveDays([wd]);col.querySelector(".dl").insertAdjacentHTML("beforeend",chipHtml(b));
+    flash(b.id);updateCounts();qn.value="";qt.value="";buzz([8,30,8]);return true};
+  let closed=false;
+  const close=()=>{if(closed)return;closed=true;const nb=document.createElement("button");nb.className="addb tap";nb.dataset.act="qadd";nb.dataset.wd=wd;nb.textContent="+ Βήμα";if(f.isConnected)f.replaceWith(nb)};
+  f.addEventListener("keydown",e=>{if(e.key==="Escape"){qn.value="";close()}if(e.key!=="Enter")return;e.preventDefault();if(!commit()){close()}else qn.focus()});
+  f.addEventListener("focusout",()=>setTimeout(()=>{if(!f.contains(document.activeElement)){commit();close()}},0));
+  f.scrollIntoView({block:"nearest",behavior:"smooth"});
+}
+
+/* ---------- sheets ---------- */
 const ed=document.createElement("div");ed.id="ed";document.body.appendChild(ed);
-function closeEd(){ed.classList.remove("open");ed.innerHTML=""}
+function closeEd(){ed.classList.remove("open");ed.innerHTML="";fitEd()}
+/* Keep the sheet above the iOS keyboard: size the overlay to the visual viewport. */
+function fitEd(){const v=window.visualViewport;if(!v||!ed.classList.contains("open")){ed.style.top=ed.style.height=ed.style.bottom="";return}ed.style.top=v.offsetTop+"px";ed.style.height=v.height+"px";ed.style.bottom="auto"}
+if(window.visualViewport){visualViewport.addEventListener("resize",fitEd);visualViewport.addEventListener("scroll",fitEd)}
+function openSheet(html){ed.innerHTML=html;ed.classList.add("open");fitEd();buzz(6)}
 function listToText(l){return(l||[]).map(x=>x[0]+(x[1]?" | "+x[1]:"")).join("\n")}
 function textToList(s){return s.split("\n").map(x=>x.trim()).filter(Boolean).map(x=>{const p=x.split("|");return[p[0].trim(),(p[1]||"").trim()]})}
-function openBlock(wd,id){
+function daySel(cur,attr,dis){return '<div class="daysel">'+ORDER.map(x=>'<button class="tap'+(x===cur?" on":"")+'" data-'+attr+'="'+x+'"'+(dis===x?" disabled":"")+'>'+SHORT[x]+'</button>').join("")+'</div>'}
+function openBlock(wd,id,focus){
   const b=id?S.blocks.find(x=>x.id===id):{id:null,weekday:wd,t:"",n:"",h:"",tag:"other",list:null};
   if(!b) return;
-  let tag=b.tag||"other";
-  ed.innerHTML='<div class="sheet glass"><div class="edtop"><div class="ttl">'+(id?"Βήμα":"Νέο βήμα")+' · '+DAYS[wd]+'</div><button class="ibtn tap" data-e="close">✕</button></div><div class="edbody">'+
-   '<div class="lbl">Τίτλος</div><input id="fn" value="'+esc(b.n)+'" placeholder="π.χ. Γυμναστήριο">'+
-   '<div class="lbl">Ώρα</div><input id="ft" value="'+esc(b.t)+'" placeholder="π.χ. ~18:40">'+
-   '<div class="lbl">Τι κάνεις ακριβώς</div><textarea id="fh">'+esc(b.h)+'</textarea>'+
-   '<div class="lbl">Είδος (για τα μοτίβα)</div><div class="tagsel" id="tg">'+Object.keys(TAGS).map(k=>'<button class="tap'+(k===tag?" on":"")+'" data-tag="'+k+'"><i style="background:'+TAGS[k][1]+'"></i>'+TAGS[k][0]+'</button>').join("")+'</div>'+
-   '<div class="lbl">Λίστα (προαιρετικό) · «Άσκηση | 3×10»</div><textarea id="fl">'+esc(listToText(b.list))+'</textarea>'+
-   '<div class="lbl">Μέρα</div><select id="fd">'+ORDER.map(x=>'<option value="'+x+'"'+(x===wd?" selected":"")+'>'+DAYS[x]+'</option>').join("")+'</select>'+
-   (id?'<div class="blk" style="margin-top:16px"><div class="ctl" style="justify-content:space-between"><span style="display:flex;gap:6px"><button class="tap" data-e="up">↑</button><button class="tap" data-e="down">↓</button><button class="tap" data-e="dup">⧉</button></span><button class="tap del" data-e="del">Διαγραφή</button></div></div>':'')+
-   '</div><div class="edfoot"><button class="btn skip tap" data-e="close">Ακύρωση</button><button class="btn done tap" data-e="save">Αποθήκευση</button></div></div>';
-  ed.classList.add("open");buzz(6);
+  let tag=b.tag||"other",nd=wd,tagTouched=!!id;
+  const ln=(b.list||[]).length,more=b.h||ln;
+  const sum=more?esc([b.h?b.h.slice(0,46)+(b.h.length>46?"…":""):"",ln?ln+" στη λίστα":""].filter(Boolean).join(" · ")):"Περιγραφή, λίστα";
+  openSheet('<div class="sheet glass"><div class="grab"></div><div class="edtop"><button class="txtbtn tap" data-e="close">Άκυρο</button><div class="ttl">'+(id?"Βήμα":"Νέο βήμα")+'</div><button class="txtbtn strong tap" data-e="save">Τέλος</button></div><div class="edbody">'+
+   '<div class="r2"><input id="fn" class="big" value="'+esc(b.n)+'" placeholder="Τίτλος" enterkeyhint="done" autocomplete="off" autocapitalize="sentences"><input id="ft" value="'+esc(b.t)+'" placeholder="Ώρα" enterkeyhint="done" autocomplete="off"></div>'+
+   '<div class="tagsel" id="tg">'+Object.keys(TAGS).map(k=>'<button class="tap'+(k===tag?" on":"")+'" data-tag="'+k+'"><i style="background:'+TAGS[k][1]+'"></i>'+TAGS[k][0]+'</button>').join("")+'</div>'+
+   '<div class="lbl">Μέρα</div>'+daySel(wd,"day")+
+   '<button class="more tap'+(more?" has":"")+'" data-e="more"><span><b>Λεπτομέρειες</b><small>'+sum+'</small></span><span class="ch">⌄</span></button>'+
+   '<div class="morebd"><div class="lbl">Τι κάνεις ακριβώς</div><textarea id="fh">'+esc(b.h)+'</textarea><div class="lbl">Λίστα · μία ανά γραμμή, «Άσκηση | 3×10»</div><textarea id="fl">'+esc(listToText(b.list))+'</textarea></div>'+
+   (id?'<div class="acts"><button class="rowbtn tap" data-e="dup">⧉ Διπλότυπο</button><button class="rowbtn del tap" data-e="del">Διαγραφή</button></div>':'')+
+   '</div></div>');
+  const fn=document.getElementById("fn");
+  if(focus) fn.focus();
+  if(!id) fn.addEventListener("input",()=>{if(tagTouched)return;tag=guessTag(fn.value);ed.querySelectorAll("[data-tag]").forEach(x=>x.classList.toggle("on",x.dataset.tag===tag))});
+  ed.querySelectorAll("#fn,#ft").forEach(i=>i.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();save()}}));
+  function save(){
+    const nb=Object.assign(b,{n:fn.value.trim()||"Βήμα",t:document.getElementById("ft").value.trim(),h:document.getElementById("fh").value.trim(),tag:tag,list:textToList(document.getElementById("fl").value)});
+    if(!nb.list.length) nb.list=null;
+    if(!id){nb.id=uuid();nb.user_id=uid();nb.weekday=nd;nb.pos=1e6;S.blocks.push(nb);saveDays([nd])}
+    else{const moved=nb.weekday!==nd;if(moved){nb.weekday=nd;nb.pos=1e6}saveDays(moved?[wd,nd]:[wd])}
+    closeEd();render(false);flash(nb.id);buzz([10,40,14]);
+    if(nd!==wd) snack((id?"Μετακινήθηκε ":"Προστέθηκε ")+dayIn(nd)); else toast(id?"Αποθηκεύτηκε":"Προστέθηκε");
+  }
   ed.onclick=e=>{
     if(e.target===ed){closeEd();return}
-    const tb=e.target.closest("[data-tag]");if(tb){tag=tb.dataset.tag;ed.querySelectorAll("[data-tag]").forEach(x=>x.classList.toggle("on",x===tb));return}
+    const tb=e.target.closest("[data-tag]");if(tb){tag=tb.dataset.tag;tagTouched=true;ed.querySelectorAll("[data-tag]").forEach(x=>x.classList.toggle("on",x===tb));return}
+    const db=e.target.closest("[data-day]");if(db){nd=+db.dataset.day;ed.querySelectorAll("[data-day]").forEach(x=>x.classList.toggle("on",x===db));return}
     const t=e.target.closest("[data-e]");if(!t)return;const a=t.dataset.e;
     if(a==="close"){closeEd();return}
-    const list=dayBlocks(wd),i=id?list.findIndex(x=>x.id===id):-1;
-    if(a==="up"&&i>0){const p=list[i-1].pos;list[i-1].pos=b.pos;b.pos=p;saveDays([wd]);closeEd();render(false);return}
-    if(a==="down"&&i>=0&&i<list.length-1){const p=list[i+1].pos;list[i+1].pos=b.pos;b.pos=p;saveDays([wd]);closeEd();render(false);return}
-    if(a==="dup"){const c=Object.assign({},b,{id:uuid(),pos:b.pos+.5,list:b.list?JSON.parse(JSON.stringify(b.list)):null});S.blocks.push(c);saveDays([wd]);closeEd();render(false);return}
-    if(a==="del"){S.blocks=S.blocks.filter(x=>x.id!==id);saveDays([wd],[id]);closeEd();render(false);toast("Διαγράφηκε");return}
-    if(a==="save"){
-      const nd=+document.getElementById("fd").value,nb=Object.assign(b,{n:document.getElementById("fn").value.trim()||"Βήμα",t:document.getElementById("ft").value.trim(),h:document.getElementById("fh").value.trim(),tag:tag,list:textToList(document.getElementById("fl").value)});
-      if(!nb.list.length) nb.list=null;
-      if(!id){nb.id=uuid();nb.weekday=nd;nb.pos=1e6;S.blocks.push(nb);saveDays([nd])}
-      else{const moved=nb.weekday!==nd;if(moved){nb.weekday=nd;nb.pos=1e6}saveDays(moved?[wd,nd]:[wd])}
-      closeEd();render(false);buzz([10,40,14]);toast("Αποθηκεύτηκε");
-    }
+    if(a==="more"){t.classList.toggle("open");return}
+    if(a==="save"){save();return}
+    if(a==="dup"){const sn=snap([wd]),c=cloneBlock(b,{pos:b.pos+.5});S.blocks.push(c);saveDays([wd]);closeEd();render(false);flash(c.id);snack("Διπλότυπο "+dayIn(wd),()=>restore(sn));return}
+    if(a==="del"){const sn=snap([wd]);S.blocks=S.blocks.filter(x=>x.id!==id);saveDays([wd],[id]);closeEd();render(false);buzz([10,30,10]);snack("Διαγράφηκε: "+b.n,()=>restore(sn));return}
+  };
+}
+/* Day menu: one tap on a day copies this day there (undoable). */
+function openDay(wd){
+  let mode=ld("tora-cpmode","replace");const done=new Set();
+  const draw=()=>{const n=dayBlocks(wd).length;
+    openSheet('<div class="sheet glass"><div class="grab"></div><div class="edtop"><div class="ttl">'+DAYS[wd]+' <small>· '+n+' βήματα</small></div><button class="txtbtn strong tap" data-e="close">Τέλος</button></div><div class="edbody">'+
+    '<div class="lbl">Αντιγραφή ημέρας σε…</div><div class="seg mini">'+[["replace","Αντικατάσταση"],["append","Προσθήκη στο τέλος"]].map(m=>'<button class="tap'+(mode===m[0]?" on":"")+'" data-mode="'+m[0]+'">'+m[1]+'</button>').join("")+'</div>'+
+    '<div class="daysel">'+ORDER.map(x=>'<button class="tap'+(done.has(x)?" ok":"")+'" data-to="'+x+'"'+(x===wd?" disabled":"")+'>'+(done.has(x)?"✓ ":"")+SHORT[x]+'</button>').join("")+'</div>'+
+    '<p class="hint">'+"Τα βήματα "+GEN[wd]+(mode==="replace"?" αντικαθιστούν όσα έχει η μέρα που πατάς.":" μπαίνουν στο τέλος της μέρας που πατάς.")+' Ένα πάτημα, με αναίρεση.</p>'+
+    '<div class="acts"><button class="rowbtn tap" data-e="add">+ Νέο βήμα</button><button class="rowbtn del tap" data-e="clear"'+(n?"":" disabled")+'>Άδειασμα</button></div>'+
+    '</div></div>')};
+  draw();
+  ed.onclick=e=>{
+    if(e.target===ed){closeEd();return}
+    const mb=e.target.closest("[data-mode]");if(mb){mode=mb.dataset.mode;sv("tora-cpmode",mode);draw();return}
+    const tb=e.target.closest("[data-to]");if(tb&&!tb.disabled){const to=+tb.dataset.to,sn=copyDay(wd,to,mode);done.add(to);render(false);draw();ripple(e.clientX,e.clientY,200,1);buzz([10,40,14]);
+      snack("Αντιγράφηκε "+dayIn(to),()=>{restore(sn);done.delete(to);if(ed.classList.contains("open"))draw()});return}
+    const t=e.target.closest("[data-e]");if(!t)return;
+    if(t.dataset.e==="close"){closeEd();return}
+    if(t.dataset.e==="add"){openBlock(wd,null,true);return}
+    if(t.dataset.e==="clear"){const sn=snap([wd]),ids=dayBlocks(wd).map(b=>b.id);S.blocks=S.blocks.filter(b=>b.weekday!==wd);saveDays([wd],ids);closeEd();render(false);snack(DAYS[wd]+": άδειασε",()=>restore(sn));return}
   };
 }
 function openRules(){
@@ -735,7 +1021,7 @@ async function boot(){
   try{ if(!DEMO) await ensureFresh(); await loadAll(); render(true); }
   catch(e){ if(!DEMO&&!sess()) renderAuth(); else root.innerHTML='<section class="glass auth"><h1>Ωχ.</h1><p>'+esc(navigator.onLine===false?"Είσαι offline.":e.message)+'</p><button class="btn done tap" id="rt">Ξανά</button></section>',document.getElementById("rt").onclick=boot; }
 }
-document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"&&S.ready&&!ed.classList.contains("open")&&!S.pending)
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"&&S.ready&&!ed.classList.contains("open")&&!S.pending&&!DR.on&&!document.querySelector(".qa"))
   (DEMO?Promise.resolve():ensureFresh()).then(loadAll).then(()=>render(false)).catch(()=>{}); });
 window.addEventListener("storage",e=>{
   if(DEMO||(e.key&&e.key!==SESS_KEY))return;
