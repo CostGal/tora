@@ -116,6 +116,13 @@ header .sp{flex:1}
 .more small{font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .more .ch{transition:transform .3s;color:var(--mut)}
 .more.open .ch{transform:rotate(180deg)}
+.more.open small{display:none}
+.agenda{display:flex;flex-direction:column;gap:4px;margin-bottom:4px}
+.arow{display:flex;align-items:center;gap:10px;min-height:46px;padding:0 12px;border:0;border-radius:12px;background:rgba(255,255,255,.05);color:var(--txt);font-family:inherit;font-size:15px;text-align:left}
+.arow i{width:6px;height:22px;border-radius:3px;flex:none}
+.arow span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arow small{flex:none;max-width:40%;color:var(--mut);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hap{position:fixed;left:-200px;top:0;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden}
 .morebd{display:none;padding-top:4px}
 .more.open+.morebd{display:block;animation:enter .4s cubic-bezier(.2,.9,.25,1.1)}
 .acts{display:flex;gap:8px;margin-top:14px}
@@ -363,7 +370,16 @@ const MONTHS=["Ιανουάριος","Φεβρουάριος","Μάρτιος","
 const ORDER=[1,2,3,4,5,6,0];
 const TAGS={work:["Δουλειά","#8a9bb0"],rest:["Ξεκούραση","#7fb7d9"],gym:["Γυμναστήριο","#D97757"],pr:["Telematica","#c49bf0"],food:["Φαγητό","#f3c25b"],home:["Σπίτι","#9ad1a0"],partner:["Κατερίνα","#f08fb0"],sleep:["Ύπνος","#5a6b8a"],other:["Άλλο","#b8b2a8"]};
 function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
-function buzz(n){try{navigator.vibrate&&navigator.vibrate(n||8)}catch(e){}}
+/* iOS Safari has no vibrate(). Since iOS 18, toggling an <input switch> gives a
+   system haptic tick, so on iOS we click a hidden one. Skipped while typing so
+   the keyboard never loses focus. Best-effort; silent where unsupported. */
+let hapL=null;
+function buzz(n){try{
+  if(navigator.vibrate){navigator.vibrate(n||8);return}
+  const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;
+  if(!hapL){hapL=document.createElement("label");hapL.className="hap";hapL.setAttribute("aria-hidden","true");hapL.innerHTML='<input type="checkbox" switch tabindex="-1">';document.body.appendChild(hapL)}
+  hapL.click();
+}catch(e){}}
 function key(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function parseKey(s){ const p=s.split('-'); return new Date(+p[0], +p[1]-1, +p[2]); }
 function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
@@ -766,7 +782,7 @@ window.addEventListener("pointercancel",e=>{if(DR.on&&e.pointerId===DR.pid)abort
 document.addEventListener("touchmove",e=>{if(DR.on&&e.cancelable)e.preventDefault()},{passive:false});
 document.addEventListener("scroll",()=>{if(DR.p&&!DR.on)cancelArm()},true);
 document.addEventListener("contextmenu",e=>{if(e.target.closest&&e.target.closest("[data-bid]"))e.preventDefault()});
-document.addEventListener("click",e=>{if(Date.now()-DR.sup<450){e.stopPropagation();e.preventDefault()}},true);
+document.addEventListener("click",e=>{if(Date.now()-DR.sup<450&&!(e.target.closest&&e.target.closest(".hap"))){e.stopPropagation();e.preventDefault()}},true);
 function cancelArm(){clearTimeout(DR.timer);if(DR.p&&DR.p.el)DR.p.el.classList.remove("arming");DR.p=null}
 function startDrag(){
   clearTimeout(DR.timer);const p=DR.p;if(!p||!p.el.isConnected){cancelArm();return}
@@ -879,6 +895,7 @@ function closeEd(){ed.classList.remove("open");ed.innerHTML="";fitEd()}
 function fitEd(){const v=window.visualViewport;if(!v||!ed.classList.contains("open")){ed.style.top=ed.style.height=ed.style.bottom="";return}ed.style.top=v.offsetTop+"px";ed.style.height=v.height+"px";ed.style.bottom="auto"}
 if(window.visualViewport){visualViewport.addEventListener("resize",fitEd);visualViewport.addEventListener("scroll",fitEd)}
 function openSheet(html){ed.innerHTML=html;ed.classList.add("open");fitEd();buzz(6)}
+function grow(t){t.style.height="auto";t.style.height=Math.min(t.scrollHeight+2,340)+"px"}
 function listToText(l){return(l||[]).map(x=>x[0]+(x[1]?" | "+x[1]:"")).join("\n")}
 function textToList(s){return s.split("\n").map(x=>x.trim()).filter(Boolean).map(x=>{const p=x.split("|");return[p[0].trim(),(p[1]||"").trim()]})}
 function daySel(cur,attr,dis){return '<div class="daysel">'+ORDER.map(x=>'<button class="tap'+(x===cur?" on":"")+'" data-'+attr+'="'+x+'"'+(dis===x?" disabled":"")+'>'+SHORT[x]+'</button>').join("")+'</div>'}
@@ -898,6 +915,7 @@ function openBlock(wd,id,focus){
    '</div></div>');
   const fn=document.getElementById("fn");
   if(focus) fn.focus();
+  ed.querySelectorAll(".morebd textarea").forEach(x=>x.addEventListener("input",()=>grow(x)));
   if(!id) fn.addEventListener("input",()=>{if(tagTouched)return;tag=guessTag(fn.value);ed.querySelectorAll("[data-tag]").forEach(x=>x.classList.toggle("on",x.dataset.tag===tag))});
   ed.querySelectorAll("#fn,#ft").forEach(i=>i.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();save()}}));
   function save(){
@@ -914,7 +932,7 @@ function openBlock(wd,id,focus){
     const db=e.target.closest("[data-day]");if(db){nd=+db.dataset.day;ed.querySelectorAll("[data-day]").forEach(x=>x.classList.toggle("on",x===db));return}
     const t=e.target.closest("[data-e]");if(!t)return;const a=t.dataset.e;
     if(a==="close"){closeEd();return}
-    if(a==="more"){t.classList.toggle("open");return}
+    if(a==="more"){t.classList.toggle("open");ed.querySelectorAll(".morebd textarea").forEach(grow);return}
     if(a==="save"){save();return}
     if(a==="dup"){const sn=snap([wd]),c=cloneBlock(b,{pos:b.pos+.5});S.blocks.push(c);saveDays([wd]);closeEd();render(false);flash(c.id);snack("Διπλότυπο "+dayIn(wd),()=>restore(sn));return}
     if(a==="del"){const sn=snap([wd]);S.blocks=S.blocks.filter(x=>x.id!==id);saveDays([wd],[id]);closeEd();render(false);buzz([10,30,10]);snack("Διαγράφηκε: "+b.n,()=>restore(sn));return}
@@ -928,6 +946,7 @@ function openDay(wd){
     '<div class="lbl">Αντιγραφή ημέρας σε…</div><div class="seg mini">'+[["replace","Αντικατάσταση"],["append","Προσθήκη στο τέλος"]].map(m=>'<button class="tap'+(mode===m[0]?" on":"")+'" data-mode="'+m[0]+'">'+m[1]+'</button>').join("")+'</div>'+
     '<div class="daysel">'+ORDER.map(x=>'<button class="tap'+(done.has(x)?" ok":"")+'" data-to="'+x+'"'+(x===wd?" disabled":"")+'>'+(done.has(x)?"✓ ":"")+SHORT[x]+'</button>').join("")+'</div>'+
     '<p class="hint">'+"Τα βήματα "+GEN[wd]+(mode==="replace"?" αντικαθιστούν όσα έχει η μέρα που πατάς.":" μπαίνουν στο τέλος της μέρας που πατάς.")+' Ένα πάτημα, με αναίρεση.</p>'+
+    '<div class="lbl" style="margin-top:6px">Βήματα</div><div class="agenda">'+(n?dayBlocks(wd).map(b=>'<button class="arow tap" data-open="'+b.id+'"><i style="background:'+tagc(b.tag)+'"></i><span>'+esc(b.n)+'</span><small>'+esc(b.t)+'</small></button>').join(""):'<p class="hint">Καμία κίνηση ακόμα.</p>')+'</div>'+
     '<div class="acts"><button class="rowbtn tap" data-e="add">+ Νέο βήμα</button><button class="rowbtn del tap" data-e="clear"'+(n?"":" disabled")+'>Άδειασμα</button></div>'+
     '</div></div>')};
   draw();
@@ -936,6 +955,7 @@ function openDay(wd){
     const mb=e.target.closest("[data-mode]");if(mb){mode=mb.dataset.mode;sv("tora-cpmode",mode);draw();return}
     const tb=e.target.closest("[data-to]");if(tb&&!tb.disabled){const to=+tb.dataset.to,sn=copyDay(wd,to,mode);done.add(to);render(false);draw();ripple(e.clientX,e.clientY,200,1);buzz([10,40,14]);
       snack("Αντιγράφηκε "+dayIn(to),()=>{restore(sn);done.delete(to);if(ed.classList.contains("open"))draw()});return}
+    const ob=e.target.closest("[data-open]");if(ob){openBlock(wd,ob.dataset.open);return}
     const t=e.target.closest("[data-e]");if(!t)return;
     if(t.dataset.e==="close"){closeEd();return}
     if(t.dataset.e==="add"){openBlock(wd,null,true);return}
