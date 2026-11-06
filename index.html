@@ -99,7 +99,8 @@ header .sp{flex:1}
 .edtop{display:flex;align-items:center;gap:10px;padding:18px 18px 10px}
 .edtop .ttl{font-size:20px;font-weight:600;flex:1}
 .edtop .ttl small{font-size:15px;font-weight:500;color:var(--mut)}
-.grab{width:38px;height:5px;border-radius:3px;background:rgba(255,255,255,.25);margin:8px auto 0;flex:none}
+.grab{width:38px;height:5px;border-radius:3px;background:rgba(255,255,255,.25);margin:8px auto 0;flex:none;box-shadow:0 0 0 12px transparent}
+.grab,.edtop{touch-action:none}
 .edtop:has(.txtbtn+.ttl) .ttl{text-align:center;font-size:17px}
 .txtbtn{min-height:44px;min-width:64px;padding:0 10px;border:0;border-radius:12px;background:transparent;color:var(--mut);font-family:inherit;font-size:17px}
 .txtbtn.strong{color:var(--acc2);font-weight:700}
@@ -196,7 +197,7 @@ textarea{resize:vertical;min-height:64px;line-height:1.4}
 .col.today{border-color:rgba(217,119,87,.6)}
 .col .ch{display:flex;align-items:center;gap:8px;padding:0 0 8px 8px}
 .col .ch b{font-size:18px;flex:1}
-.col .ch .cnt{font-size:13px;color:var(--mut);min-width:18px;text-align:right}
+.col .ch>span{font-size:13px;color:var(--mut);white-space:nowrap}
 .ibtn.dm{width:44px;height:44px;font-size:20px;border-color:transparent;background:rgba(255,255,255,.06)}
 .dl{position:relative;display:flex;flex-direction:column;gap:6px;min-height:52px}
 .bk{display:flex;align-items:center;gap:10px;min-height:50px;padding:6px 12px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);font-size:15px;-webkit-touch-callout:none;touch-action:manipulation}
@@ -702,7 +703,7 @@ function renderWeek(animate){
       return '<div class="cday'+(wd===td?" today":"")+'" data-dcol="'+wd+'"><button class="cdh tap" data-act="daymenu" data-wd="'+wd+'" aria-label="'+DAYS[wd]+'">'+SHORT[wd]+'<small class="cnt">'+bl.length+'</small></button><div class="dl" data-wd="'+wd+'">'+bl.map(pillHtml).join("")+'</div><button class="cadd tap" data-act="qadd" data-wd="'+wd+'" aria-label="Νέο βήμα '+DAYS[wd]+'">+</button></div>'}).join("")+'</div></div>';
   }else{
     h+='<div class="wk" id="wk">'+ORDER.map((wd,ci)=>{const bl=dayBlocks(wd);
-      return '<div class="glass col'+(wd===td?" today":"")+(animate?" enter":"")+'" style="animation-delay:'+(ci*40)+'ms" data-dcol="'+wd+'"><div class="ch"><b>'+DAYS[wd]+'</b><span class="cnt">'+bl.length+'</span><button class="ibtn dm tap" data-act="daymenu" data-wd="'+wd+'" aria-label="Επιλογές για '+DAYS[wd]+'">⋯</button></div><div class="dl" data-wd="'+wd+'">'+bl.map(chipHtml).join("")+'</div><button class="addb tap" data-act="qadd" data-wd="'+wd+'">+ Βήμα</button></div>'}).join("")+'</div>';
+      return '<div class="glass col'+(wd===td?" today":"")+(animate?" enter":"")+'" style="animation-delay:'+(ci*40)+'ms" data-dcol="'+wd+'"><div class="ch"><b>'+DAYS[wd]+'</b><span><span class="cnt">'+bl.length+'</span> βήμ.</span><button class="ibtn dm tap" data-act="daymenu" data-wd="'+wd+'" aria-label="Επιλογές για '+DAYS[wd]+'">⋯</button></div><div class="dl" data-wd="'+wd+'">'+bl.map(chipHtml).join("")+'</div><button class="addb tap" data-act="qadd" data-wd="'+wd+'">+ Βήμα</button></div>'}).join("")+'</div>';
   }
   h+=calendarHtml();
   h+='<div class="glass sec open" style="margin-top:14px"><div class="hd tap" data-act="rules"><span>Κανόνες</span><span>✎</span></div><div class="bd">'+S.rules.map(r=>'<div class="rule">'+ruleHtml(r)+"</div>").join("")+"</div></div>";
@@ -792,7 +793,7 @@ function startDrag(){
   g.style.width=r.width+"px";g.style.height=r.height+"px";g.style.transformOrigin=(p.x-r.left)+"px "+(p.y-r.top)+"px";g.style.left=r.left+"px";g.style.top=r.top+"px";
   document.body.appendChild(g);
   Object.assign(DR,{on:true,pid:p.id,g,el,ox:p.x-r.left,oy:p.y-r.top,x:p.lx,y:p.ly,zone:null});DR.p=null;
-  el.classList.add("ph");document.body.classList.add("dragging");zones.classList.add("on");
+  el.classList.add("ph");document.body.classList.add("dragging");zones.classList.add("on");hideSnack();
   const wk=document.getElementById("wk");if(wk)wk.classList.add("dragging");
   try{el.releasePointerCapture&&el.releasePointerCapture(DR.pid)}catch(x){}
   buzz(14);ripple(p.lx,p.ly,150,.9);
@@ -895,6 +896,14 @@ function closeEd(){ed.classList.remove("open");ed.innerHTML="";fitEd()}
 function fitEd(){const v=window.visualViewport;if(!v||!ed.classList.contains("open")){ed.style.top=ed.style.height=ed.style.bottom="";return}ed.style.top=v.offsetTop+"px";ed.style.height=v.height+"px";ed.style.bottom="auto"}
 if(window.visualViewport){visualViewport.addEventListener("resize",fitEd);visualViewport.addEventListener("scroll",fitEd)}
 function openSheet(html){ed.innerHTML=html;ed.classList.add("open");fitEd();buzz(6)}
+/* Pull the sheet down by its top bar to dismiss (same as Άκυρο). */
+(function(){let y0=null,sh=null,dy=0;
+  ed.addEventListener("pointerdown",e=>{if(e.target.closest("button,input,textarea"))return;const top=e.target.closest(".grab,.edtop");if(!top)return;sh=top.closest(".sheet");y0=e.clientY;dy=0;sh.style.transition="none"});
+  window.addEventListener("pointermove",e=>{if(y0==null)return;dy=Math.max(0,e.clientY-y0);sh.style.transform="translateY("+dy+"px)"});
+  const end=()=>{if(y0==null)return;y0=null;sh.style.transition="transform .3s cubic-bezier(.2,.9,.25,1)";if(dy>90){sh.style.transform="translateY(110%)";setTimeout(closeEd,220);buzz(6)}else sh.style.transform=""};
+  window.addEventListener("pointerup",end);window.addEventListener("pointercancel",end);
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&ed.classList.contains("open"))closeEd()});
+})();
 function grow(t){t.style.height="auto";t.style.height=Math.min(t.scrollHeight+2,340)+"px"}
 function listToText(l){return(l||[]).map(x=>x[0]+(x[1]?" | "+x[1]:"")).join("\n")}
 function textToList(s){return s.split("\n").map(x=>x.trim()).filter(Boolean).map(x=>{const p=x.split("|");return[p[0].trim(),(p[1]||"").trim()]})}
