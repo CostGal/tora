@@ -25,6 +25,10 @@ Demo mode runs when you open the page via `file://` or with `?demo`. It needs no
 - Writes are optimistic. Mutate `S`, then `track(DB.x())`. Failures surface as a toast and a red sync dot.
 - `saveDays(weekdays, deletedIds)` renumbers each touched day's `pos` to 0..n-1 and upserts the whole day. Every template edit goes through it.
 
+## Step time
+
+`t` stays free text in the DB, but the UI only writes it through `timePicker()`. The allowed shapes are `18:40`, `~18:40` (approximate), `09:00–17:00`, or a word (`πρωί`). `parseT`/`fmtT` convert between the text and the picker state, so any new place that edits time must use the picker rather than a text input.
+
 ## Design
 
 Pond background on a canvas (koi, lily pads, ripples on every touch) with glass cards (`.glass`). `.tilt` cards lean toward the finger, and `.tap` elements press and ripple. The accent is `#D97757`. Use the Futura/Jost stack. iOS-first: 44pt taps, safe-area insets, 16px inputs so iOS doesn't zoom.

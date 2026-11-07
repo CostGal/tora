@@ -273,6 +273,36 @@ body.dragging .tabs{opacity:0;pointer-events:none}
 .tagsel button.on{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.4)}
 select{width:100%;font-family:inherit;font-size:16px;color:var(--txt);background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px}
 .demo{position:fixed;top:calc(env(safe-area-inset-top) + 6px);right:10px;z-index:6;font-size:11px;letter-spacing:.14em;color:#1a0c06;background:var(--acc);padding:4px 8px;border-radius:8px;font-weight:700}
+
+/* ---------- time picker ---------- */
+.tbtn{flex:0 0 auto;min-width:112px;max-width:48%;min-height:50px;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.25);color:var(--txt);font-family:inherit;font-size:16px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tbtn.empty{color:var(--mut)}
+.tbtn.open{border-color:var(--acc);box-shadow:0 0 0 3px rgba(217,119,87,.2)}
+.tbtn svg{width:16px;height:16px;flex:none;opacity:.7}
+.qa .tbtn{flex:0 0 86px;min-height:44px;font-size:15px}
+.tp{margin:0 0 14px;padding:12px;border-radius:18px;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.1);animation:enter .4s cubic-bezier(.2,.9,.25,1.1)}
+.tp .seg{margin-bottom:10px}
+.tp .prev{text-align:center;font-size:30px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.02em;margin:2px 0 10px;min-height:38px}
+.tp .prev small{font-size:14px;color:var(--mut);font-weight:500;display:block;letter-spacing:0}
+.wheels{position:relative;display:flex;justify-content:center;gap:4px;height:200px;-webkit-mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent);mask-image:linear-gradient(transparent,#000 30%,#000 70%,transparent)}
+.wheels::before{content:"";position:absolute;left:8px;right:8px;top:80px;height:40px;border-radius:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);pointer-events:none}
+.wheels .colon{align-self:center;font-size:24px;font-weight:600;z-index:1}
+.wheel{position:relative;z-index:1;width:76px;height:200px;overflow-y:auto;scroll-snap-type:y mandatory;scrollbar-width:none;overscroll-behavior:contain;touch-action:pan-y}
+.wheel::-webkit-scrollbar{display:none}
+.wheel .wp{height:80px}
+.wheel .wi{height:40px;line-height:40px;text-align:center;font-size:22px;font-variant-numeric:tabular-nums;scroll-snap-align:center;color:rgba(244,241,234,.45);transition:color .15s,transform .15s;cursor:pointer}
+.wheel .wi.on{color:var(--txt);font-weight:600;transform:scale(1.12)}
+.tp .row{display:flex;gap:6px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+.chipb{min-height:40px;padding:0 13px;border-radius:12px;border:1px solid var(--edge);background:rgba(255,255,255,.06);color:var(--txt);font-family:inherit;font-size:14px;font-variant-numeric:tabular-nums}
+.chipb.on{background:var(--acc);border-color:transparent;color:#1a0c06;font-weight:700}
+.chipb.soft.on{background:rgba(217,119,87,.25);border-color:rgba(217,119,87,.6);color:var(--txt)}
+.ends{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.ends button{min-height:50px;border-radius:14px;border:1px solid var(--edge);background:rgba(255,255,255,.05);color:var(--txt);font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.ends button small{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.ends button b{font-size:19px;font-variant-numeric:tabular-nums}
+.ends button.on{border-color:var(--acc);background:rgba(217,119,87,.16)}
+.tp .lblchips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.tp-done{width:100%;margin-top:12px}
 </style>
 </head>
 <body>
@@ -876,16 +906,19 @@ function drop(){
 function quickAdd(wd,btn){
   if(S.wkMode==="cal"||!btn.closest(".col")){openBlock(wd,null,true);return}
   const col=btn.closest("[data-dcol]"),f=document.createElement("div");f.className="qa";
-  f.innerHTML='<input class="qn" placeholder="Νέο βήμα…" enterkeyhint="done" autocomplete="off" autocapitalize="sentences"><input class="qt" placeholder="Ώρα" enterkeyhint="done" autocomplete="off">';
-  btn.replaceWith(f);const qn=f.querySelector(".qn"),qt=f.querySelector(".qt");qn.focus();
+  f.innerHTML='<input class="qn" placeholder="Νέο βήμα…" enterkeyhint="done" autocomplete="off" autocapitalize="sentences">'+tbtnHtml("")+'';
+  btn.replaceWith(f);const qn=f.querySelector(".qn"),qtb=f.querySelector(".tbtn");let qtv="";qn.focus();
+  /* pointerdown fires before focusout, so mark the form busy while the picker is up */
+  qtb.addEventListener("pointerdown",()=>{f.dataset.picking="1"});
+  qtb.addEventListener("click",()=>{f.dataset.picking="1";pickTime(qtv,v=>{if(v!==null){qtv=v;setTbtn(qtb,v)}delete f.dataset.picking;if(f.isConnected)qn.focus()})});
   const commit=()=>{const n=qn.value.trim();if(!n)return false;
-    const b={id:uuid(),user_id:uid(),weekday:wd,pos:1e6,t:qt.value.trim(),n,h:"",tag:guessTag(n),list:null};
+    const b={id:uuid(),user_id:uid(),weekday:wd,pos:1e6,t:qtv,n,h:"",tag:guessTag(n),list:null};
     S.blocks.push(b);saveDays([wd]);col.querySelector(".dl").insertAdjacentHTML("beforeend",chipHtml(b));
-    flash(b.id);updateCounts();qn.value="";qt.value="";buzz([8,30,8]);return true};
+    flash(b.id);updateCounts();qn.value="";qtv="";setTbtn(qtb,"");buzz([8,30,8]);return true};
   let closed=false;
   const close=()=>{if(closed)return;closed=true;const nb=document.createElement("button");nb.className="addb tap";nb.dataset.act="qadd";nb.dataset.wd=wd;nb.textContent="+ Βήμα";if(f.isConnected)f.replaceWith(nb)};
   f.addEventListener("keydown",e=>{if(e.key==="Escape"){qn.value="";close()}if(e.key!=="Enter")return;e.preventDefault();if(!commit()){close()}else qn.focus()});
-  f.addEventListener("focusout",()=>setTimeout(()=>{if(!f.contains(document.activeElement)){commit();close()}},0));
+  f.addEventListener("focusout",()=>setTimeout(()=>{if(f.dataset.picking)return;if(!f.contains(document.activeElement)){commit();close()}},0));
   f.scrollIntoView({block:"nearest",behavior:"smooth"});
 }
 
@@ -907,6 +940,80 @@ function openSheet(html){ed.innerHTML=html;ed.classList.add("open");fitEd();buzz
 function grow(t){t.style.height="auto";t.style.height=Math.min(t.scrollHeight+2,340)+"px"}
 function listToText(l){return(l||[]).map(x=>x[0]+(x[1]?" | "+x[1]:"")).join("\n")}
 function textToList(s){return s.split("\n").map(x=>x.trim()).filter(Boolean).map(x=>{const p=x.split("|");return[p[0].trim(),(p[1]||"").trim()]})}
+
+/* ---------- time picker ----------
+   A step's time stays a short text (t) so old values keep working, but it is
+   always produced by this picker: an exact time ("18:40"), an approximate one
+   ("~18:40"), a range ("09:00–17:00") or a word ("πρωί"). */
+const CLOCK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+const TLABELS=["πρωί","μεσημέρι","απόγευμα","βράδυ","κατευθείαν","μετά τη δουλειά"];
+const HH=[...Array(24)].map((_,i)=>String(i).padStart(2,"0")),MM=[...Array(12)].map((_,i)=>String(i*5).padStart(2,"0"));
+function parseT(t){
+  t=String(t||"").trim();
+  const m=t.match(/^(~)?\s*(\d{1,2})[:.](\d{2})(?:\s*[–\-]\s*(\d{1,2})[:.](\d{2}))?$/);
+  if(m){const a=pad(m[2])+":"+snap5(m[3]);return m[4]?{mode:"range",approx:!!m[1],a,b:pad(m[4])+":"+snap5(m[5]),label:""}:{mode:"time",approx:!!m[1],a,b:addMin(a,60),label:""}}
+  return {mode:t?"label":"time",approx:false,a:"18:00",b:"19:00",label:t,empty:!t};
+}
+function pad(h){return String(Math.min(23,+h)).padStart(2,"0")}
+function snap5(m){return String(Math.min(55,Math.round(+m/5)*5)).padStart(2,"0")}
+function addMin(hm,n){let [h,m]=hm.split(":").map(Number);let x=(h*60+m+n+1440)%1440;return pad(Math.floor(x/60))+":"+String(x%60).padStart(2,"0")}
+function fmtT(st){if(st.empty&&st.mode!=="label")return"";if(st.mode==="label")return st.label.trim();if(st.mode==="range")return (st.approx?"~":"")+st.a+"–"+st.b;return (st.approx?"~":"")+st.a}
+function tbtnHtml(t,id){return '<button type="button" class="tbtn tap'+(t?"":" empty")+'"'+(id?' id="'+id+'"':'')+'>'+CLOCK+'<span>'+(t?esc(t):"Ώρα")+'</span></button>'}
+function setTbtn(btn,t){btn.classList.toggle("empty",!t);btn.querySelector("span").textContent=t||"Ώρα"}
+function wheel(vals,cur,onPick){
+  const w=document.createElement("div");w.className="wheel";
+  w.innerHTML='<div class="wp"></div>'+vals.map(v=>'<div class="wi">'+v+'</div>').join("")+'<div class="wp"></div>';
+  const items=[...w.querySelectorAll(".wi")];let idx=Math.max(0,vals.indexOf(cur)),t=null,silent=true;
+  const mark=()=>{const i=Math.round(w.scrollTop/40);items.forEach((x,k)=>x.classList.toggle("on",k===i));return i};
+  w.addEventListener("scroll",()=>{const i=mark();if(i!==idx&&!silent){idx=i;buzz(3);clearTimeout(t);t=setTimeout(()=>onPick(vals[Math.max(0,Math.min(vals.length-1,idx))]),60)}});
+  items.forEach((x,k)=>x.addEventListener("click",()=>w.scrollTo({top:k*40,behavior:"smooth"})));
+  const set=(v,smooth)=>{const k=vals.indexOf(v);if(k<0)return;silent=true;idx=k;w.scrollTo({top:k*40,behavior:smooth?"smooth":"auto"});mark();setTimeout(()=>silent=false,smooth?350:60)};
+  requestAnimationFrame(()=>set(cur,false));
+  return {el:w,set};
+}
+/* Mounts into host; calls onChange(text) on every change. */
+function timePicker(host,initial,onChange){
+  const st=parseT(initial);let end="a";
+  const emit=()=>{st.empty=false;const v=fmtT(st);prev();onChange(v)};
+  function prev(){const p=host.querySelector(".prev");if(!p)return;const v=fmtT(st);
+    p.innerHTML=v?esc(v.replace(/^~/,"≈ "))+(st.mode==="range"?'<small>'+dur(st.a,st.b)+'</small>':''):'<small>Χωρίς ώρα</small>'}
+  function dur(a,b){let m=(toM(b)-toM(a)+1440)%1440;return (m>=60?Math.floor(m/60)+"ω ":"")+(m%60?m%60+"'":"")}
+  function toM(hm){const [h,m]=hm.split(":").map(Number);return h*60+m}
+  function draw(){
+    let h='<div class="seg mini">'+[["time","Ώρα"],["range","Από – Έως"],["label","Χωρίς ώρα"]].map(m=>'<button type="button" class="tap'+(st.mode===m[0]?" on":"")+'" data-tm="'+m[0]+'">'+m[1]+'</button>').join("")+'</div><div class="prev"></div>';
+    if(st.mode==="range") h+='<div class="ends"><button type="button" class="tap'+(end==="a"?" on":"")+'" data-end="a"><small>Από</small><b>'+st.a+'</b></button><button type="button" class="tap'+(end==="b"?" on":"")+'" data-end="b"><small>Έως</small><b>'+st.b+'</b></button></div>';
+    if(st.mode==="label") h+='<div class="lblchips">'+TLABELS.map(l=>'<button type="button" class="chipb tap'+(st.label===l?" on":"")+'" data-lb="'+esc(l)+'">'+esc(l)+'</button>').join("")+'</div><input class="tpl" placeholder="ή γράψε κάτι δικό σου" value="'+esc(TLABELS.indexOf(st.label)<0?st.label:"")+'" autocomplete="off" enterkeyhint="done">';
+    else h+='<div class="wheels"></div><div class="row"><button type="button" class="chipb tap" data-nd="-15">−15\'</button><button type="button" class="chipb tap" data-nd="15">+15\'</button><button type="button" class="chipb soft tap'+(st.approx?" on":"")+'" data-ap="1">≈ περίπου</button></div>';
+    host.innerHTML=h;prev();
+    if(st.mode!=="label"){
+      const box=host.querySelector(".wheels"),cur=()=>end==="b"&&st.mode==="range"?st.b:st.a;
+      const setCur=v=>{if(end==="b"&&st.mode==="range")st.b=v;else{st.a=v;if(st.mode==="range"&&toM(st.b)<=toM(st.a))st.b=addMin(st.a,60)}const eb=host.querySelector('[data-end="'+(end==="b"&&st.mode==="range"?"b":"a")+'"] b');if(eb)eb.textContent=end==="b"?st.b:st.a;const ob=host.querySelector('[data-end="b"] b');if(ob)ob.textContent=st.b;emit()};
+      const wh=wheel(HH,cur().split(":")[0],v=>setCur(v+":"+cur().split(":")[1])),wm=wheel(MM,cur().split(":")[1],v=>setCur(cur().split(":")[0]+":"+v));
+      const c=document.createElement("div");c.className="colon";c.textContent=":";box.append(wh.el,c,wm.el);host._wheels={wh,wm,cur};
+    }
+  }
+  host.onclick=e=>{
+    const m=e.target.closest("[data-tm]");if(m){st.mode=m.dataset.tm;end="a";if(st.mode==="range"&&toM(st.b)<=toM(st.a))st.b=addMin(st.a,60);if(st.mode==="label"&&!st.label)st.label="";draw();emit();return}
+    const en=e.target.closest("[data-end]");if(en){end=en.dataset.end;host.querySelectorAll("[data-end]").forEach(x=>x.classList.toggle("on",x===en));const w=host._wheels,v=w.cur().split(":");w.wh.set(v[0],true);w.wm.set(v[1],true);return}
+    const nd=e.target.closest("[data-nd]");if(nd){const w=host._wheels,v=addMin(w.cur(),+nd.dataset.nd).split(":");w.wh.set(v[0],true);w.wm.set(v[1],true);if(end==="b"&&st.mode==="range")st.b=v.join(":");else{st.a=v.join(":");if(st.mode==="range"&&toM(st.b)<=toM(st.a))st.b=addMin(st.a,60)}const eb=host.querySelectorAll("[data-end] b");if(eb.length){eb[0].textContent=st.a;eb[1].textContent=st.b}emit();buzz(5);return}
+    const ap=e.target.closest("[data-ap]");if(ap){st.approx=!st.approx;ap.classList.toggle("on",st.approx);emit();return}
+    const lb=e.target.closest("[data-lb]");if(lb){st.label=lb.dataset.lb;host.querySelectorAll("[data-lb]").forEach(x=>x.classList.toggle("on",x===lb));const i=host.querySelector(".tpl");if(i)i.value="";emit();return}
+  };
+  host.oninput=e=>{if(e.target.classList.contains("tpl")){st.label=e.target.value;host.querySelectorAll("[data-lb]").forEach(x=>x.classList.remove("on"));emit()}};
+  /* Opening the picker on a step with no time means "give it one": start at
+     the next quarter hour instead of showing a wheel that says nothing. */
+  if(st.empty){const d=new Date(),m=Math.ceil((d.getHours()*60+d.getMinutes())/15)*15;st.mode="time";st.a=addMin("00:00",m);st.b=addMin(st.a,60)}
+  draw();if(st.empty)setTimeout(emit,0);
+  return {value:()=>fmtT(st)};
+}
+/* A small sheet with just the picker — used by quick add. */
+function pickTime(initial,cb){
+  let val=initial||"";
+  openSheet('<div class="sheet glass" style="top:auto;max-height:80%"><div class="grab"></div><div class="edtop"><button class="txtbtn tap" data-e="clear">Καμία</button><div class="ttl">Ώρα</div><button class="txtbtn strong tap" data-e="ok">Τέλος</button></div><div class="edbody"><div class="tp" id="tpq"></div></div></div>');
+  timePicker(document.getElementById("tpq"),initial,v=>val=v);
+  ed.onclick=e=>{if(e.target===ed){closeEd();cb(null);return}const t=e.target.closest("[data-e]");if(!t)return;
+    if(t.dataset.e==="ok"){closeEd();cb(val)}else if(t.dataset.e==="clear"){closeEd();cb("")}};
+}
 function daySel(cur,attr,dis){return '<div class="daysel">'+ORDER.map(x=>'<button class="tap'+(x===cur?" on":"")+'" data-'+attr+'="'+x+'"'+(dis===x?" disabled":"")+'>'+SHORT[x]+'</button>').join("")+'</div>'}
 function openBlock(wd,id,focus){
   const b=id?S.blocks.find(x=>x.id===id):{id:null,weekday:wd,t:"",n:"",h:"",tag:"other",list:null};
@@ -915,20 +1022,22 @@ function openBlock(wd,id,focus){
   const ln=(b.list||[]).length,more=b.h||ln;
   const sum=more?esc([b.h?b.h.slice(0,46)+(b.h.length>46?"…":""):"",ln?ln+" στη λίστα":""].filter(Boolean).join(" · ")):"Περιγραφή, λίστα";
   openSheet('<div class="sheet glass"><div class="grab"></div><div class="edtop"><button class="txtbtn tap" data-e="close">Άκυρο</button><div class="ttl">'+(id?"Βήμα":"Νέο βήμα")+'</div><button class="txtbtn strong tap" data-e="save">Τέλος</button></div><div class="edbody">'+
-   '<div class="r2"><input id="fn" class="big" value="'+esc(b.n)+'" placeholder="Τίτλος" enterkeyhint="done" autocomplete="off" autocapitalize="sentences"><input id="ft" value="'+esc(b.t)+'" placeholder="Ώρα" enterkeyhint="done" autocomplete="off"></div>'+
+   '<div class="r2"><input id="fn" class="big" value="'+esc(b.n)+'" placeholder="Τίτλος" enterkeyhint="done" autocomplete="off" autocapitalize="sentences">'+tbtnHtml(b.t,"ftb")+'</div><div id="tpw" hidden></div>'+
    '<div class="tagsel" id="tg">'+Object.keys(TAGS).map(k=>'<button class="tap'+(k===tag?" on":"")+'" data-tag="'+k+'"><i style="background:'+TAGS[k][1]+'"></i>'+TAGS[k][0]+'</button>').join("")+'</div>'+
    '<div class="lbl">Μέρα</div>'+daySel(wd,"day")+
    '<button class="more tap'+(more?" has":"")+'" data-e="more"><span><b>Λεπτομέρειες</b><small>'+sum+'</small></span><span class="ch">⌄</span></button>'+
    '<div class="morebd"><div class="lbl">Τι κάνεις ακριβώς</div><textarea id="fh">'+esc(b.h)+'</textarea><div class="lbl">Λίστα · μία ανά γραμμή, «Άσκηση | 3×10»</div><textarea id="fl">'+esc(listToText(b.list))+'</textarea></div>'+
    (id?'<div class="acts"><button class="rowbtn tap" data-e="dup">⧉ Διπλότυπο</button><button class="rowbtn del tap" data-e="del">Διαγραφή</button></div>':'')+
    '</div></div>');
-  const fn=document.getElementById("fn");
+  const fn=document.getElementById("fn"),ftb=document.getElementById("ftb"),tpw=document.getElementById("tpw");let tval=b.t||"",tp=null;
+  ftb.addEventListener("click",()=>{const open=tpw.hidden;tpw.hidden=!open;ftb.classList.toggle("open",open);
+    if(open&&!tp){tpw.className="tp";tp=timePicker(tpw,tval,v=>{tval=v;setTbtn(ftb,v)})}if(open){fn.blur();tpw.scrollIntoView({block:"nearest",behavior:"smooth"})}});
   if(focus) fn.focus();
   ed.querySelectorAll(".morebd textarea").forEach(x=>x.addEventListener("input",()=>grow(x)));
   if(!id) fn.addEventListener("input",()=>{if(tagTouched)return;tag=guessTag(fn.value);ed.querySelectorAll("[data-tag]").forEach(x=>x.classList.toggle("on",x.dataset.tag===tag))});
-  ed.querySelectorAll("#fn,#ft").forEach(i=>i.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();save()}}));
+  ed.querySelectorAll("#fn").forEach(i=>i.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();save()}}));
   function save(){
-    const nb=Object.assign(b,{n:fn.value.trim()||"Βήμα",t:document.getElementById("ft").value.trim(),h:document.getElementById("fh").value.trim(),tag:tag,list:textToList(document.getElementById("fl").value)});
+    const nb=Object.assign(b,{n:fn.value.trim()||"Βήμα",t:tval,h:document.getElementById("fh").value.trim(),tag:tag,list:textToList(document.getElementById("fl").value)});
     if(!nb.list.length) nb.list=null;
     if(!id){nb.id=uuid();nb.user_id=uid();nb.weekday=nd;nb.pos=1e6;S.blocks.push(nb);saveDays([nd])}
     else{const moved=nb.weekday!==nd;if(moved){nb.weekday=nd;nb.pos=1e6}saveDays(moved?[wd,nd]:[wd])}
