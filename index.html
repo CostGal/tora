@@ -242,6 +242,36 @@ textarea{resize:vertical;min-height:64px;line-height:1.4}
 select{width:100%;font-family:inherit;font-size:16px;color:var(--txt);background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px}
 .demo{position:fixed;top:calc(env(safe-area-inset-top) + 6px);right:10px;z-index:6;font-size:11px;letter-spacing:.14em;color:#1a0c06;background:var(--acc);padding:4px 8px;border-radius:8px;font-weight:700}
 
+/* ---------- + question flow ---------- */
+#qf{position:fixed;inset:0;z-index:15;display:none;background:rgba(3,10,10,.4);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+#qf.open{display:block}
+#qf.closing .qin{transition:transform .26s,opacity .26s;transform:scale(.94);opacity:0}
+.qin{position:absolute;inset:calc(env(safe-area-inset-top) + 10px) 10px calc(env(safe-area-inset-bottom) + 10px);max-width:560px;margin:0 auto;display:flex;flex-direction:column;border-radius:28px;background:linear-gradient(160deg,rgba(30,44,44,.78),rgba(14,20,20,.86));animation:enter .45s cubic-bezier(.2,.9,.25,1.1)}
+.qtop{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 0}
+.qdots{display:flex;gap:7px}
+.qdots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:all .3s}
+.qdots i.d{background:var(--ok)}
+.qdots i.c{background:var(--acc);transform:scale(1.3);box-shadow:0 0 10px var(--acc)}
+.qbody{flex:1;overflow-y:auto;padding:22px 20px 10px;animation:enter .35s cubic-bezier(.2,.9,.25,1.1)}
+.qbody.qout{transition:opacity .14s,transform .14s;opacity:0;transform:translateX(-18px)}
+.qbody h2{font-size:34px;font-weight:600;margin:4px 2px 18px}
+.qbig{font-size:24px!important;font-weight:500;padding:16px 16px!important;border-radius:16px!important}
+.qtags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.qtags button{min-height:36px;padding:0 10px;border-radius:10px;border:1px solid var(--edge);background:rgba(255,255,255,.05);color:var(--mut);font-family:inherit;font-size:13px;display:flex;align-items:center;gap:6px}
+.qtags button i{width:7px;height:7px;border-radius:50%}
+.qtags button.on{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.4);color:var(--txt)}
+.qchips{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 14px}
+.qchips .chipb{min-height:50px;padding:0 18px;font-size:16px;border-radius:14px}
+.qdate{position:relative;display:inline-flex;align-items:center}
+.qdate input{position:absolute;inset:0;opacity:0;width:100%;height:100%;padding:0;border:0}
+.qskip{width:100%;min-height:56px;margin-bottom:16px;border-radius:16px;border:1.5px dashed rgba(255,255,255,.3);background:transparent;color:var(--txt);font-family:inherit;font-size:16px}
+.qtime{font-size:22px!important;max-width:180px;font-variant-numeric:tabular-nums;margin-bottom:6px}
+.qsub{color:var(--mut);margin:-8px 2px 10px}
+.qopts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.qopts .rowbtn{min-height:58px;white-space:normal;line-height:1.25;padding:6px 10px}
+.qfoot{display:flex;gap:10px;padding:12px 16px 16px}
+.qfoot .btn{flex:1}
+
 /* ---------- desktop planner + side panel ---------- */
 #root.wide{max-width:1500px;padding-left:24px;padding-right:24px;transition:padding .3s}
 body.siding #root.wide{padding-right:420px}
@@ -692,7 +722,7 @@ tabs.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)r
 /* The + button. Replaced by the question flow (mobile) / side panel (desktop). */
 function addNew(){
   if(isDesk()){if(S.view!=="week"){S.view="week";sv('tora-view',S.view);render(true)}openBlock(null,{weekday:today().getDay(),ndate:key(today())},true);return}
-  openBlock(null,{weekday:today().getDay()},true)}
+  addFlow()}
 
 function render(animate){
   drawTabs();
@@ -1145,6 +1175,112 @@ function openBlock(id,pre,focus){
     if(a==="dup"){const sn=snap([g]),c=cloneBlock(b,{pos:b.pos+(b.date?0:.5)});S.blocks.push(c);saveDays([g]);closeEd();render(false);flash(c.id);snack("Διπλότυπο",()=>restore(sn));return}
     if(a==="del"){const sn=snap([g]);S.blocks=S.blocks.filter(x=>x.id!==id);saveDays([g],[id]);closeEd();render(false);buzz([10,30,10]);snack("Διαγράφηκε: "+b.n,()=>restore(sn));return}
   };
+}
+/* ---------- + on mobile: one question per screen ----------
+   Τι; → Πότε; → Τι ώρα; → Προθεσμία; → (Πού να μπει; only on a clash). */
+const qf=document.createElement("div");qf.id="qf";document.body.appendChild(qf);
+function clashes(list,t){
+  const st=parseT(t);if(st.mode==="label")return {hits:[]};
+  const w=windows(list),s=dm(st.a);let e;
+  if(st.mode==="range"){e=dm(st.b);if(e<=s)e+=1440}
+  else{const nx=list.map(b=>w[b.id]).filter(v=>!v.untimed&&v.s>s).map(v=>v.s);e=nx.length?Math.max(s+30,Math.min(...nx)):s+60}
+  return {hits:list.filter(b=>{const v=w[b.id];return !v.untimed&&s<v.e&&v.s<e})};
+}
+function addFlow(){
+  const Q={n:"",tag:"other",tagT:false,once:true,date:key(today()),wds:new Set([today().getDay()]),t:"",dl:"",dlt:"",rem:[],step:0};
+  const targets=()=>Q.once?[{k:Q.date,list:planDay(Q.date)}]:[...Q.wds].sort((a,b)=>ORDER.indexOf(a)-ORDER.indexOf(b)).map(wd=>({k:wd,list:dayBlocks(wd)}));
+  const clashAll=()=>targets().map(x=>Object.assign(x,clashes(x.list,Q.t))).filter(x=>x.hits.length);
+  const steps=()=>["what","when","time","dl"].concat(clashAll().length?["place"]:[]);
+  const tomorrow=key(addDays(today(),1));
+  let tp=null;
+  function draw(){
+    const st=steps(),cur=st[Q.step],last=Q.step===st.length-1;
+    let b='';
+    if(cur==="what") b='<h2>Τι;</h2><input id="qn" class="qbig" value="'+esc(Q.n)+'" placeholder="π.χ. Τηλέφωνο στη ΔΕΗ" enterkeyhint="next" autocomplete="off" autocapitalize="sentences"><div class="qtags">'+Object.keys(TAGS).map(k=>'<button class="tap'+(k===Q.tag?" on":"")+'" data-tag="'+k+'"><i style="background:'+TAGS[k][1]+'"></i>'+TAGS[k][0]+'</button>').join("")+'</div>';
+    if(cur==="when") b='<h2>Πότε;</h2><div class="seg mini"><button class="tap'+(Q.once?" on":"")+'" data-once="1">Μία φορά</button><button class="tap'+(Q.once?"":" on")+'" data-once="0">Κάθε εβδομάδα</button></div>'+
+      (Q.once?'<div class="qchips"><button class="chipb tap'+(Q.date===key(today())?" on":"")+'" data-date="'+key(today())+'">Σήμερα</button><button class="chipb tap'+(Q.date===tomorrow?" on":"")+'" data-date="'+tomorrow+'">Αύριο</button><label class="chipb qdate'+(Q.date!==key(today())&&Q.date!==tomorrow?" on":"")+'">'+(Q.date!==key(today())&&Q.date!==tomorrow?dateLabel(Q.date):"Άλλη μέρα")+'<input type="date" id="qd" value="'+Q.date+'" min="'+key(today())+'"></label></div>'
+      :'<div class="daysel">'+ORDER.map(x=>'<button class="tap'+(Q.wds.has(x)?" on":"")+'" data-wd="'+x+'">'+SHORT[x]+'</button>').join("")+'</div>');
+    if(cur==="time") b='<h2>Τι ώρα;</h2><div class="tp" id="qtp"></div>';
+    if(cur==="dl") b='<h2>Προθεσμία;</h2><button class="qskip tap" data-q="nodl">Παράλειψη · χωρίς προθεσμία</button>'+
+      '<div class="qchips"><button class="chipb tap'+(Q.dl===key(today())?" on":"")+'" data-dl="'+key(today())+'">Σήμερα</button><button class="chipb tap'+(Q.dl===tomorrow?" on":"")+'" data-dl="'+tomorrow+'">Αύριο</button><label class="chipb qdate'+(Q.dl&&Q.dl!==key(today())&&Q.dl!==tomorrow?" on":"")+'">'+(Q.dl&&Q.dl!==key(today())&&Q.dl!==tomorrow?dateLabel(Q.dl):"Άλλη μέρα")+'<input type="date" id="qdl" value="'+(Q.dl||key(today()))+'" min="'+key(today())+'"></label></div>'+
+      (Q.dl?'<div class="lbl">Ώρα</div><input type="time" id="qdt" class="qtime" value="'+(Q.dlt||"18:00")+'"><div class="lbl">Υπενθύμιση</div><div class="qchips">'+REM.map(r=>'<button class="chipb tap'+(Q.rem.indexOf(r[0])>=0?" on":"")+'" data-rem="'+r[0]+'">'+r[1]+'</button>').join("")+'<button class="chipb tap'+(Q.rem.length?"":" on")+'" data-rem="0">Καμία</button></div>':'');
+    if(cur==="place"){const cs=clashAll(),names=[...new Set(cs.flatMap(x=>x.hits.map(h=>h.n)))],one=names.length===1?names[0]:null,X=one?"«"+esc(one)+"»":"";
+      b='<h2>Πού να μπει;</h2><p class="qsub">Πέφτει πάνω σε:</p><div class="agenda">'+cs.map(x=>x.hits.map(h=>'<div class="arow"><i style="background:'+tagc(h.tag)+'"></i><span>'+esc(h.n)+'</span><small>'+(typeof x.k==="number"?SHORT[x.k]+" · ":"")+esc(h.t)+'</small></div>').join("")).join("")+'</div>'+
+      '<div class="qopts"><button class="rowbtn tap" data-place="before">Πριν από '+(X||"αυτό")+'</button><button class="rowbtn tap" data-place="after">Μετά από '+(X||"αυτό")+'</button><button class="rowbtn tap" data-place="replace">Αντικατάστασε '+(X?"το "+X:"αυτό")+'</button><button class="rowbtn tap" data-place="both">Και τα δύο</button></div>'}
+    qf.innerHTML='<div class="qin glass"><div class="qtop"><button class="ibtn tap" data-q="close" aria-label="Κλείσιμο">✕</button><div class="qdots">'+st.map((_,i)=>'<i class="'+(i<Q.step?"d":i===Q.step?"c":"")+'"></i>').join("")+'</div><span style="width:42px"></span></div>'+
+      '<div class="qbody" data-step="'+cur+'">'+b+'</div>'+
+      (cur==="place"?'<div class="qfoot"><button class="btn skip tap" data-q="back">Πίσω</button></div>':'<div class="qfoot">'+(Q.step?'<button class="btn skip tap" data-q="back">Πίσω</button>':'')+'<button class="btn done tap" data-q="next">'+(last?"Προσθήκη":"Επόμενο")+'</button></div>')+'</div>';
+    if(cur==="what"){const i=qf.querySelector("#qn");i.focus();i.setSelectionRange(i.value.length,i.value.length);
+      i.addEventListener("input",()=>{Q.n=i.value;if(!Q.tagT){Q.tag=guessTag(Q.n);qf.querySelectorAll("[data-tag]").forEach(x=>x.classList.toggle("on",x.dataset.tag===Q.tag))}})}
+    if(cur==="time") tp=timePicker(qf.querySelector("#qtp"),Q.t,v=>{Q.t=v;const nb=qf.querySelector('[data-q="next"]');if(nb)nb.textContent=steps().length-1===Q.step?"Προσθήκη":"Επόμενο";drawDots()});
+    const qd=qf.querySelector("#qd");if(qd)qd.addEventListener("change",()=>{if(qd.value){Q.date=qd.value;draw()}});
+    const qdl=qf.querySelector("#qdl");if(qdl)qdl.addEventListener("change",()=>{if(qdl.value){Q.dl=qdl.value;draw()}});
+    const qdt=qf.querySelector("#qdt");if(qdt)qdt.addEventListener("input",()=>{Q.dlt=qdt.value});
+  }
+  function drawDots(){const st=steps(),d=qf.querySelector(".qdots");if(d)d.innerHTML=st.map((_,i)=>'<i class="'+(i<Q.step?"d":i===Q.step?"c":"")+'"></i>').join("")}
+  function go(n){const b=qf.querySelector(".qbody");Q.step=n;if(b){b.classList.add("qout");setTimeout(draw,140)}else draw();buzz(5)}
+  function next(){
+    const cur=steps()[Q.step];
+    if(cur==="what"&&!Q.n.trim()){const i=qf.querySelector("#qn");i.animate([{transform:"translateX(0)"},{transform:"translateX(8px)"},{transform:"translateX(-6px)"},{transform:"translateX(0)"}],{duration:300});i.focus();return}
+    if(cur==="when"&&!Q.once&&!Q.wds.size){toast("Διάλεξε τουλάχιστον μία μέρα");return}
+    if(cur==="dl"&&Q.dl&&!Q.dlt)Q.dlt="18:00";
+    if(Q.step>=steps().length-1){finish("both");return}
+    go(Q.step+1);
+  }
+  function close(){qf.classList.remove("open");qf.innerHTML="";qf.onclick=null;document.removeEventListener("keydown",onKey)}
+  function finish(place){
+    const ts=targets(),keys=ts.map(x=>x.k),cs=place==="both"?[]:clashAll(),sn=snap(keys),del=[];
+    let dl=null;if(Q.dl){dl=new Date(Q.dl+"T"+(Q.dlt||"18:00")).toISOString()}
+    let firstId=null;
+    ts.forEach(x=>{
+      const hits=(cs.find(c=>c.k===x.k)||{hits:[]}).hits;
+      const nb={id:uuid(),user_id:uid(),weekday:Q.once?parseKey(Q.date).getDay():x.k,date:Q.once?Q.date:null,pos:0,t:Q.t,n:Q.n.trim(),h:"",tag:Q.tag,list:null,deadline:dl,remind_min:dl&&Q.rem.length?Q.rem.slice().sort((a,b)=>b-a):null,replaces:null};
+      firstId=firstId||nb.id;
+      let L=x.list.slice(),idx=null;
+      if(hits.length&&place!=="both"){
+        const ix=hits.map(h=>L.indexOf(h));
+        idx=place==="after"?Math.max(...ix)+1:Math.min(...ix);
+        /* Replace: a one-off stands in for a weekly row on its date (replaces),
+           so the template is untouched; anything else is deleted (undoable).
+           Only one weekly row per one-off can be stood in for. */
+        if(place==="replace"){
+          hits.forEach(h=>{ if(Q.once&&!h.date&&!nb.replaces) nb.replaces=h.id; else if(!(Q.once&&!h.date)) del.push(h.id); });
+          L=L.filter(h=>del.indexOf(h.id)<0&&h.id!==nb.replaces);
+        }
+      }
+      S.blocks=S.blocks.filter(b=>del.indexOf(b.id)<0);
+      if(Q.once){
+        if(idx==null){S.blocks.push(nb);placeByTime(nb)}
+        else{nb.pos=L.slice(0,idx).filter(b=>!b.date&&b.id!==nb.replaces).length;S.blocks.push(nb)}
+      }else{
+        const rows=dayBlocks(x.k);if(idx==null)idx=timeIndex(rows,nb.t);else idx=Math.min(idx,rows.length);
+        rows.splice(idx,0,nb);rows.forEach((r,i)=>r.pos=i);S.blocks.push(nb);
+      }
+    });
+    saveDays(keys,del);
+    const r=qf.querySelector(".qin").getBoundingClientRect();ripple(r.left+r.width/2,r.top+r.height/2,360,1.3);buzz([10,40,14]);
+    qf.classList.add("closing");setTimeout(()=>{qf.classList.remove("closing");close();render(false);flash(firstId)},260);
+    snack("Προστέθηκε"+(Q.once?" · "+dateLabel(Q.date):""),()=>restore(sn));
+    if(dl&&Q.rem.length) setTimeout(afterReminder,400);
+  }
+  function onKey(e){if(e.key==="Escape"){close();return}if(e.key==="Enter"&&!(e.target&&e.target.tagName==="TEXTAREA")){e.preventDefault();if(steps()[Q.step]!=="place")next()}}
+  qf.onclick=e=>{
+    const t=e.target.closest("[data-q],[data-tag],[data-once],[data-date],[data-wd],[data-dl],[data-rem],[data-place]");if(!t)return;
+    const d=t.dataset;
+    if(d.q==="close"){close();return}
+    if(d.q==="back"){if(Q.step)go(Q.step-1);return}
+    if(d.q==="next"){next();return}
+    if(d.q==="nodl"){Q.dl="";Q.dlt="";Q.rem=[];if(Q.step>=steps().length-1)finish("both");else go(Q.step+1);return}
+    if(d.tag){Q.tag=d.tag;Q.tagT=true;qf.querySelectorAll("[data-tag]").forEach(x=>x.classList.toggle("on",x===t));return}
+    if(d.once!=null){Q.once=d.once==="1";draw();return}
+    if(d.date){Q.date=d.date;draw();return}
+    if(d.wd!=null){const w=+d.wd;if(Q.wds.has(w))Q.wds.delete(w);else Q.wds.add(w);t.classList.toggle("on",Q.wds.has(w));buzz(4);return}
+    if(d.dl){Q.dl=d.dl;draw();return}
+    if(d.rem!=null){const v=+d.rem;if(!v)Q.rem=[];else{const i=Q.rem.indexOf(v);if(i>=0)Q.rem.splice(i,1);else Q.rem.push(v)}draw();buzz(4);return}
+    if(d.place){finish(d.place);return}
+  };
+  document.addEventListener("keydown",onKey);
+  qf.classList.add("open");draw();
 }
 /* First reminder ever saved: offer to turn notifications on (Phase 5). */
 function afterReminder(){}
