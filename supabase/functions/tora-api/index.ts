@@ -120,7 +120,14 @@ function planDay(all: Block[], dk: string) {
     for (const o of oo) if (Math.min(Math.max(0, Math.round(o.pos)), tpl.length) === i) out.push(o);
     if (i < tpl.length) out.push(tpl[i]);
   }
-  return out;
+  return timeSort(out);
+}
+/** Same as index.html: timed steps in clock order, untimed ones keep their slot. */
+function timeSort(list: Block[]) {
+  const slots: number[] = [], items: { b: Block; m: number; i: number }[] = [];
+  list.forEach((b, i) => { const m = ordM(b.t); if (m != null) { slots.push(i); items.push({ b, m, i }); } });
+  items.sort((x, y) => x.m - y.m || x.i - y.i);
+  const out = list.slice(); slots.forEach((k, j) => (out[k] = items[j].b)); return out;
 }
 function timeIndex(rows: Block[], t: string) { const m = ordM(t); if (m == null) return rows.length; const j = rows.findIndex((r) => { const x = ordM(r.t); return x != null && x > m; }); return j < 0 ? rows.length : j; }
 /** Puts b (already in `all`) in time order and returns the rows whose pos changed. */

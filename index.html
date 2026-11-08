@@ -582,7 +582,16 @@ function planDay(dk){
   const oo=oneOffs(dk),hide=new Set(oo.map(b=>b.replaces).filter(Boolean));
   const tpl=dayBlocks(parseKey(dk).getDay()).filter(b=>!hide.has(b.id)),out=[];
   for(let i=0;i<=tpl.length;i++){ oo.forEach(o=>{ if(Math.min(Math.max(0,Math.round(o.pos)),tpl.length)===i) out.push(o); }); if(i<tpl.length) out.push(tpl[i]); }
-  return out;
+  return timeSort(out);
+}
+/* The day is always in clock order: steps with a time (or a known word like
+   «πρωί») are sorted by it; steps without one ("κατευθείαν") keep their slot.
+   Anchors/pos only decide the order among equal times and for untimed steps. */
+function timeSort(list){
+  const slots=[],items=[];
+  list.forEach((b,i)=>{const m=ordM(b.t);if(m!=null){slots.push(i);items.push({b,m,i})}});
+  items.sort((x,y)=>x.m-y.m||x.i-y.i);
+  const out=list.slice();slots.forEach((k,j)=>out[k]=items[j].b);return out;
 }
 function gk(b){ return b.date||+b.weekday; }
 /* Today's sequence and where we are in it. Events match by block id; old rows
@@ -601,7 +610,7 @@ async function loadAll(){
   const d=await DB.load();
   S.blocks=d.blocks||[]; S.events=d.events||[]; S.ot=d.ot||[];
   S.rules=Array.isArray(d.rules)?d.rules:DEF_RULES;
-  if(!S.blocks.length){ /* first run: plant the default week */
+  if(!S.blocks.length&&d.rules==null){ /* first run only (no settings row yet): plant the default week */
     S.blocks=defRows(uid()); await DB.upsertBlocks(S.blocks);
     if(!d.rules) await DB.saveRules(S.rules);
   }
