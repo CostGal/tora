@@ -69,6 +69,14 @@ A step can have a `deadline` and `remind_min` (any of 60/30/15). Every 5 minutes
 - iOS delivers web push only to the home-screen app (iOS 16.4+), never to a Safari tab.
 - Because of the 5-minute cron, a reminder can arrive up to ~5' late.
 
+## Calendar feed and Claude
+
+The `tora-api` edge function exposes two secret links (`tora_tokens`), managed in Πρόγραμμα → «Ημερολόγιο & Claude»:
+- `ics/<token>.ics` is a read-only feed for Google Calendar; Notion Calendar shows it through Google.
+- `mcp/<token>` is an MCP server that Claude (a claude.ai custom connector) uses to read the plan, add, edit or delete steps, and mark ✓ / skip / start.
+
+Tora is the source of truth; the calendar only mirrors it. The function repeats the plan logic in TypeScript, so a change to `planDay` / `windows` / `placeByTime` in `index.html` must also go into `supabase/functions/tora-api/index.ts`. Details are in `supabase/README.md`.
+
 ## Step time
 
 `t` stays free text in the DB, but the UI only writes it through `timePicker()`, or through drag/resize on the desktop grid, which keeps the `~` and the shape. The allowed shapes are `18:40`, `~18:40` (approximate), `09:00–17:00`, a word (`πρωί`), or empty. `parseT`/`fmtT` convert between the text and the picker state; `parseT("")` has `empty:true` and must be treated as untimed. Any new place that edits time must use the picker rather than a text input.

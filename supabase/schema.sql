@@ -74,3 +74,15 @@ alter table public.tora_reminder_log enable row level security;
 create policy tora_push_subscriptions_own on public.tora_push_subscriptions for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 create policy tora_reminder_log_read_own on public.tora_reminder_log for select to authenticated using ((select auth.uid()) = user_id);
 -- plus tora_claim_reminders() / tora_reminder_secrets(): service role only.
+
+-- Secret links for tora-api (migration `tora_tokens`)
+create table public.tora_tokens (
+  token text primary key default encode(extensions.gen_random_bytes(24), 'hex'),
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  kind text not null check (kind in ('ics','mcp')),
+  created_at timestamptz not null default now(),
+  unique (user_id, kind)
+);
+alter table public.tora_tokens enable row level security;
+create policy tora_tokens_own on public.tora_tokens for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+create index tora_events_block on public.tora_events (block_id) where block_id is not null;

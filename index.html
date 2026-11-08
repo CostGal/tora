@@ -333,6 +333,8 @@ body.gdrag,body.gdrag *{cursor:grabbing!important;user-select:none}
 .col .ch b small{font-size:13px;font-weight:500;color:var(--mut);margin-left:4px}
 .bk.once{border-style:dashed;border-color:rgba(255,255,255,.22)}
 .remc{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.lsec{margin-bottom:22px}.lsec .hint{padding-bottom:8px}.lsec .warn,.hint.warn{color:#ffb4a6}
+.lurl{font-size:13px!important;font-family:ui-monospace,Menlo,monospace!important;color:var(--mut)!important;min-width:0}
 
 /* ---------- time picker ---------- */
 .tbtn{flex:0 0 auto;min-width:112px;max-width:48%;min-height:50px;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.25);color:var(--txt);font-family:inherit;font-size:16px;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -526,7 +528,9 @@ const remote={
   deleteBlocks(ids){ return ids.length?api('tora_blocks?id=in.('+ids.join(',')+')',{method:'DELETE'}):Promise.resolve(); },
   putEvent(ev){ return api('tora_events?on_conflict=user_id,date,pos',{method:'POST',body:[ev],headers:UPSERT}); },
   delEvent(date,pos){ return api('tora_events?date=eq.'+date+'&pos=eq.'+pos,{method:'DELETE'}); },
-  saveRules(rules){ return api('tora_settings?on_conflict=user_id',{method:'POST',body:[{user_id:uid(),rules,updated_at:new Date().toISOString()}],headers:UPSERT}); }
+  saveRules(rules){ return api('tora_settings?on_conflict=user_id',{method:'POST',body:[{user_id:uid(),rules,updated_at:new Date().toISOString()}],headers:UPSERT}); },
+  tokens(){ return api('tora_tokens?select=kind,token'); },
+  async newToken(kind){ await api('tora_tokens?kind=eq.'+kind,{method:'DELETE'}); const r=await api('tora_tokens',{method:'POST',body:[{kind}],headers:{Prefer:'return=representation'}}); return r[0]; }
 };
 const DK='tora-demo-v2';
 function demoStore(){
@@ -557,7 +561,9 @@ const demo={
   async deleteBlocks(ids){ const s=demoStore(); s.blocks=s.blocks.filter(b=>ids.indexOf(b.id)<0); sv(DK,s); },
   async putEvent(ev){ const s=demoStore(); s.events=s.events.filter(e=>!(e.date===ev.date&&e.pos===ev.pos)); s.events.push(ev); sv(DK,s); },
   async delEvent(date,pos){ const s=demoStore(); s.events=s.events.filter(e=>!(e.date===date&&e.pos===pos)); sv(DK,s); },
-  async saveRules(rules){ const s=demoStore(); s.rules=rules; sv(DK,s); }
+  async saveRules(rules){ const s=demoStore(); s.rules=rules; sv(DK,s); },
+  async tokens(){ return ld('tora-demo-tokens',[]); },
+  async newToken(kind){ const t={kind,token:[...crypto.getRandomValues(new Uint8Array(24))].map(x=>x.toString(16).padStart(2,'0')).join('')}; sv('tora-demo-tokens',ld('tora-demo-tokens',[]).filter(x=>x.kind!==kind).concat(t)); return t; }
 };
 const DB = DEMO ? demo : remote;
 
@@ -989,11 +995,41 @@ let DR_sup=0;
 document.addEventListener("click",e=>{if(Date.now()-DR_sup<350){e.stopPropagation();e.preventDefault()}},true);
 matchMedia("(min-width:1024px)").addEventListener("change",()=>{closeEd();render(false)});
 /* Sibling apps + sign out: the only account controls, at the foot of Πρόγραμμα. */
-function footHtml(){let h='';
+function footHtml(){let h='<div class="sibs"><a class="tap" href="#" id="lnk">Ημερολόγιο & Claude</a></div>';
   if(SIBLINGS.length) h+='<div class="sibs">'+SIBLINGS.map(a=>'<a class="tap" href="../'+a[0]+'/">'+a[1]+'</a>').join("")+'</div>';
   if(!DEMO) h+='<div class="sibs"><a class="tap" href="#" id="so">Αποσύνδεση</a></div>';
   return h}
-function bindFoot(){const so=document.getElementById("so"); if(so) so.onclick=e=>{e.preventDefault();setSess(null);resetData();boot()}}
+function bindFoot(){const so=document.getElementById("so"); if(so) so.onclick=e=>{e.preventDefault();setSess(null);resetData();boot()};
+  const l=document.getElementById("lnk"); if(l) l.onclick=e=>{e.preventDefault();openLinks()}}
+/* ---------- Ημερολόγιο & Claude ----------
+   Two secret links served by the tora-api edge function (supabase/README.md):
+   ics = read-only calendar feed for Google / Notion Calendar,
+   mcp = Claude connector that can read and change the plan. */
+const API_URL=SB_URL+'/functions/v1/tora-api/';
+async function openLinks(){
+  let toks={};
+  const draw=()=>{
+    const sec=(kind,title,about,steps,warn)=>{const t=toks[kind],url=t?API_URL+kind+'/'+t+(kind==='ics'?'.ics':''):'';
+      return '<div class="lsec"><div class="lbl">'+title+'</div><p class="hint">'+about+'</p>'+
+        (t?'<div class="r2"><input readonly class="lurl" value="'+esc(url)+'"><button class="rowbtn tap" data-copy="'+esc(url)+'" style="flex:0 0 auto">Αντιγραφή</button></div><p class="hint">'+steps+'</p>'+(warn?'<p class="hint warn">'+warn+'</p>':'')+'<button class="txtbtn tap" data-new="'+kind+'">Νέος σύνδεσμος (ο παλιός σταματά)</button>'
+          :'<button class="rowbtn tap" data-new="'+kind+'" style="width:100%">Δημιουργία συνδέσμου</button>')+'</div>'};
+    openSheet('<div class="sheet glass"><div class="grab"></div><div class="edtop"><div class="ttl">Ημερολόγιο & Claude</div><button class="txtbtn strong tap" data-e="close">Τέλος</button></div><div class="edbody">'+
+      (DEMO?'<p class="hint warn">Demo: οι σύνδεσμοι εδώ είναι ψεύτικοι.</p>':'')+
+      sec('ics','Google / Notion Calendar','Η Τώρα ως ημερολόγιο, μόνο για ανάγνωση: εβδομαδιαία βήματα, βήματα μίας φοράς και προθεσμίες. Το Google το ανανεώνει κάθε λίγες ώρες.',
+        'Google Calendar στον υπολογιστή → Άλλα ημερολόγια → + → Από URL → επικόλληση. Το Notion Calendar το δείχνει μέσω του Google λογαριασμού σου.','')+
+      sec('mcp','Claude','Ο Claude βλέπει το πρόγραμμα και μπορεί να προσθέσει, να αλλάξει ή να σημειώσει ✓ βήματα.',
+        'claude.ai → Ρυθμίσεις → Connectors → Add custom connector → όνομα «Τώρα», URL αυτό. Μετά γράψε π.χ. «βάλε αύριο 18:00 οδοντίατρο με υπενθύμιση 30\'».','Όποιος έχει αυτόν τον σύνδεσμο μπορεί να αλλάξει το πρόγραμμά σου. Μην τον μοιράζεσαι.')+
+      '</div></div>');
+    HOST.onclick=async e=>{
+      if(e.target===ed){closeEd();return}
+      const c=e.target.closest("[data-copy]");if(c){const v=c.dataset.copy;try{await navigator.clipboard.writeText(v);toast("Αντιγράφηκε")}catch(x){const i=c.parentNode.querySelector("input");i.select();toast("Πάτα αντιγραφή")}buzz(6);return}
+      const n=e.target.closest("[data-new]");if(n){n.disabled=true;try{const t=await DB.newToken(n.dataset.new);toks[t.kind]=t.token;draw();buzz([8,30,8])}catch(x){toast("Δεν έγινε: "+x.message);n.disabled=false}return}
+      const t=e.target.closest("[data-e]");if(t&&t.dataset.e==="close")closeEd();
+    };
+  };
+  try{(await DB.tokens()).forEach(t=>toks[t.kind]=t.token)}catch(e){toast("Δεν φορτώθηκαν οι σύνδεσμοι")}
+  draw();
+}
 function flash(id){const n=document.querySelector('[data-bid="'+id+'"],[data-gb="'+id+'"]');if(n){n.classList.add("landed");setTimeout(()=>n.classList.remove("landed"),900)}}
 function calendarHtml(){
   if(!S.calMonth) S.calMonth=new Date(today().getFullYear(),today().getMonth(),1);
