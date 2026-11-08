@@ -242,6 +242,10 @@ textarea{resize:vertical;min-height:64px;line-height:1.4}
 select{width:100%;font-family:inherit;font-size:16px;color:var(--txt);background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:10px 12px}
 .demo{position:fixed;top:calc(env(safe-area-inset-top) + 6px);right:10px;z-index:6;font-size:11px;letter-spacing:.14em;color:#1a0c06;background:var(--acc);padding:4px 8px;border-radius:8px;font-weight:700}
 
+#pushask{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 12px);transform:translate(-50%,-30px);opacity:0;pointer-events:none;z-index:31;width:min(440px,calc(100vw - 24px));padding:14px;border-radius:20px;transition:all .4s cubic-bezier(.2,.9,.25,1.2);background:linear-gradient(140deg,rgba(40,56,56,.94),rgba(20,28,28,.96))}
+#pushask.on{transform:translate(-50%,0);opacity:1;pointer-events:auto}
+#pushask p{font-size:15px;line-height:1.4;margin:0 4px 10px}
+#pushask div{display:flex;gap:8px;align-items:center}#pushask .btn{flex:1;padding:13px 14px;font-size:16px}
 /* ---------- + question flow ---------- */
 #qf{position:fixed;inset:0;z-index:15;display:none;background:rgba(3,10,10,.4);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
 #qf.open{display:block}
@@ -969,7 +973,7 @@ function cloneBlock(b,extra){return Object.assign({},b,{id:uuid(),list:b.list?JS
    times get a rough clock position only for ordering (never for the grid). */
 const WORDM={"πρωί":480,"μεσημέρι":780,"απόγευμα":1020,"βράδυ":1260};
 function dm(hm){const p=hm.split(":").map(Number),x=p[0]*60+p[1];return x<240?x+1440:x}
-function ordM(t){const st=parseT(t);if(st.mode==="label")return st.empty?null:(WORDM[st.label.trim()]!=null?WORDM[st.label.trim()]:null);return dm(st.a)}
+function ordM(t){const st=parseT(t);if(st.empty)return null;if(st.mode==="label")return st.empty?null:(WORDM[st.label.trim()]!=null?WORDM[st.label.trim()]:null);return dm(st.a)}
 /* Where a block goes in time order: before the first row that starts later. */
 function timeIndex(rows,t){const m=ordM(t);if(m==null)return rows.length;const j=rows.findIndex(r=>{const x=ordM(r.t);return x!=null&&x>m});return j<0?rows.length:j}
 /* Put b into its day in time order (template: renumber; one-off: anchor). */
@@ -985,7 +989,7 @@ function placeByTime(b){
    and the add flow's clash check. */
 function windows(list){
   const w={},starts=[];
-  list.forEach(b=>{const st=parseT(b.t);if(st.mode==="label"){w[b.id]={untimed:true};return}
+  list.forEach(b=>{const st=parseT(b.t);if(st.mode==="label"||st.empty){w[b.id]={untimed:true};return}
     const s=dm(st.a);let e=null;if(st.mode==="range"){e=dm(st.b);if(e<=s)e+=1440}w[b.id]={s,e,range:st.mode==="range",approx:st.approx};starts.push(s)});
   list.forEach(b=>{const x=w[b.id];if(x.untimed)return;if(x.e!=null){x.ve=x.e;return}const nx=starts.filter(v=>v>x.s),n=nx.length?Math.min(...nx):null;
     x.e=n!=null?Math.max(x.s+30,n):x.s+60; x.ve=n!=null?Math.max(x.s+15,n):x.s+60});
@@ -1180,7 +1184,7 @@ function openBlock(id,pre,focus){
    Τι; → Πότε; → Τι ώρα; → Προθεσμία; → (Πού να μπει; only on a clash). */
 const qf=document.createElement("div");qf.id="qf";document.body.appendChild(qf);
 function clashes(list,t){
-  const st=parseT(t);if(st.mode==="label")return {hits:[]};
+  const st=parseT(t);if(st.mode==="label"||st.empty)return {hits:[]};
   const w=windows(list),s=dm(st.a);let e;
   if(st.mode==="range"){e=dm(st.b);if(e<=s)e+=1440}
   else{const nx=list.map(b=>w[b.id]).filter(v=>!v.untimed&&v.s>s).map(v=>v.s);e=nx.length?Math.max(s+30,Math.min(...nx)):s+60}
@@ -1282,8 +1286,51 @@ function addFlow(){
   document.addEventListener("keydown",onKey);
   qf.classList.add("open");draw();
 }
-/* First reminder ever saved: offer to turn notifications on (Phase 5). */
-function afterReminder(){}
+/* ---------- deadline reminders (web push) ----------
+   Server side: tora-reminders edge function + pg_cron, see supabase/README.md.
+   The VAPID key is Ledger's public half (same project); it must match Vault. */
+const VAPID_PUBLIC='BJ3z0F0bLRPRCpeVBmIlzotPA5XWH35cMrS0aNUNb8Bt7iJNTjo6KUnEH2MOEfIZaUrmL9A6hlGnCL-4lRW0p0s';
+function pushWhy(){
+  if('serviceWorker' in navigator&&'PushManager' in window&&'Notification' in window) return null;
+  const ios=/iPhone|iPad|iPod/.test(navigator.userAgent),standalone=navigator.standalone===true||matchMedia('(display-mode: standalone)').matches;
+  return ios&&!standalone?'Στο iPhone οι ειδοποιήσεις δουλεύουν μόνο από την εφαρμογή στην αρχική οθόνη: Safari → Κοινοποίηση → Προσθήκη στην οθόνη Αφετηρίας.':'Αυτός ο browser δεν δείχνει ειδοποιήσεις.';
+}
+function b64u(x){const b=atob(x.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((x.length+3)%4));return Uint8Array.from(b,c=>c.charCodeAt(0))}
+async function saveSub(sub){const j=sub.toJSON();await api('tora_push_subscriptions?on_conflict=endpoint',{method:'POST',headers:UPSERT,body:[{endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth}]})}
+async function enablePush(){
+  const regP=navigator.serviceWorker.register('sw.js');
+  /* requestPermission must be the first await: iOS only honours it straight out of the tap */
+  const perm=await Notification.requestPermission();
+  if(perm!=='granted') throw new Error(perm==='denied'?'Οι ειδοποιήσεις είναι μπλοκαρισμένες. Ρυθμίσεις → Ειδοποιήσεις → Τώρα.':'Δεν δόθηκε άδεια.');
+  await regP;const reg=await navigator.serviceWorker.ready;
+  const sub=(await reg.pushManager.getSubscription())||await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUBLIC)});
+  await saveSub(sub);
+}
+/* Every load: if this device already said yes, re-save its subscription quietly. */
+function startReminders(){
+  if(DEMO||pushWhy()||Notification.permission!=='granted') return;
+  navigator.serviceWorker.register('sw.js').then(async reg=>{const sub=await reg.pushManager.getSubscription();if(sub)await saveSub(sub)}).catch(()=>{});
+}
+/* The first time a deadline with a reminder is saved, offer notifications
+   once. There is no settings screen. */
+const pushEl=document.createElement("div");pushEl.id="pushask";pushEl.className="glass";document.body.appendChild(pushEl);
+function afterReminder(){
+  if(ld('tora-push-asked',false)) return;
+  if(!DEMO&&!pushWhy()&&Notification.permission==='granted'){startReminders();return}
+  sv('tora-push-asked',true);
+  pushEl.innerHTML='<p>Να σε ειδοποιώ πριν από τις προθεσμίες;</p><div><button class="btn done tap" data-p="on">Ενεργοποίηση ειδοποιήσεων</button><button class="ibtn tap" data-p="x" aria-label="Όχι τώρα">✕</button></div>';
+  pushEl.classList.add("on");
+}
+pushEl.addEventListener("click",async e=>{
+  const b=e.target.closest("[data-p]");if(!b)return;
+  if(b.dataset.p==="x"){pushEl.classList.remove("on");return}
+  const msg=t=>{pushEl.querySelector("p").textContent=t};
+  if(DEMO){msg("Demo: εδώ δεν στέλνονται ειδοποιήσεις.");setTimeout(()=>pushEl.classList.remove("on"),2200);return}
+  const why=pushWhy();if(why){msg(why);return}
+  b.disabled=true;
+  try{await enablePush();msg("Έτοιμο. Θα έρχονται ειδοποιήσεις σε αυτή τη συσκευή.");buzz([10,40,14]);setTimeout(()=>pushEl.classList.remove("on"),2200)}
+  catch(x){msg(x.message);b.disabled=false}
+});
 /* Day menu: one tap on a day copies this day there (undoable). */
 function openDay(wd){
   let mode=ld("tora-cpmode","replace");const done=new Set();
@@ -1384,7 +1431,7 @@ function resetData(){S.ready=false;S.blocks=[];S.events=[];S.ot=[];S.rules=[]}
 async function boot(){
   if(!DEMO&&!sess()){renderAuth();return}
   root.innerHTML='<div class="empty" style="margin-top:30vh">…</div>';
-  try{ if(!DEMO) await ensureFresh(); await loadAll(); render(true); }
+  try{ if(!DEMO) await ensureFresh(); await loadAll(); render(true); startReminders(); }
   catch(e){ if(!DEMO&&!sess()) renderAuth(); else root.innerHTML='<section class="glass auth"><h1>Ωχ.</h1><p>'+esc(navigator.onLine===false?"Είσαι offline.":e.message)+'</p><button class="btn done tap" id="rt">Ξανά</button></section>',document.getElementById("rt").onclick=boot; }
 }
 document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"&&S.ready&&!edOpen()&&!S.pending)

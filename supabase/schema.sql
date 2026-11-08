@@ -51,3 +51,26 @@ alter table public.tora_settings enable row level security;
 create policy tora_blocks_own on public.tora_blocks for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 create policy tora_events_own on public.tora_events for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 create policy tora_settings_own on public.tora_settings for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+
+-- Deadline reminders (migration `tora_reminders`, full text in migrations/tora_reminders.sql)
+create table public.tora_push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  endpoint text not null unique,
+  p256dh text not null,
+  auth text not null,
+  created_at timestamptz not null default now()
+);
+create table public.tora_reminder_log (
+  block_id uuid not null references public.tora_blocks(id) on delete cascade,
+  deadline timestamptz not null,
+  offset_min int not null,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  sent_at timestamptz not null default now(),
+  primary key (block_id, deadline, offset_min)
+);
+alter table public.tora_push_subscriptions enable row level security;
+alter table public.tora_reminder_log enable row level security;
+create policy tora_push_subscriptions_own on public.tora_push_subscriptions for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
+create policy tora_reminder_log_read_own on public.tora_reminder_log for select to authenticated using ((select auth.uid()) = user_id);
+-- plus tora_claim_reminders() / tora_reminder_secrets(): service role only.

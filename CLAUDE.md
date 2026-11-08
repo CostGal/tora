@@ -36,3 +36,12 @@ Pond background on a canvas (koi, lily pads, ripples on every touch) with glass 
 ## Deploy
 
 GitHub Pages from `main`, repo root, at `https://costgal.github.io/tora/`. Keep all asset URLs relative.
+
+## Deadline reminders
+
+A step can have a `deadline` and `remind_min` (any of 60/30/15). Every 5 minutes pg_cron calls the `tora-reminders` edge function, which claims due offsets in one statement (`tora_claim_reminders()`, logged in `tora_reminder_log`) and pushes «X» σε 1 ώρα / 30' / 15' to every device in `tora_push_subscriptions`. The pattern is copied from Ledger, but the objects are Tora's own. Ledger's tables, function and cron job are never touched. VAPID keys are Ledger's, read from Vault. Details are in `supabase/README.md`.
+
+- `sw.js` is notification-only (scope `/tora/`, no fetch handler).
+- The "Ενεργοποίηση ειδοποιήσεων" card shows once, the first time a deadline with a reminder is saved. There is no settings screen.
+- iOS delivers web push only to the home-screen app (iOS 16.4+), never to a Safari tab.
+- Because of the 5-minute cron, a reminder can arrive up to ~5' late.
