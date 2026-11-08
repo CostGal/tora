@@ -61,6 +61,17 @@ header .sp{flex:1}
 .done::after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:skewX(-20deg);animation:shine 4s ease-in-out infinite}
 @keyframes shine{0%,55%{left:-60%}80%,100%{left:130%}}
 .skip{background:rgba(255,255,255,.1);border:1px solid var(--edge)}
+.btns .btn{padding-left:12px;padding-right:12px}
+.start{flex:1;background:rgba(217,119,87,.16);border:1px solid rgba(217,119,87,.55);color:var(--acc2)}
+.now.prog{box-shadow:0 18px 50px -18px rgba(0,0,0,.65),0 0 0 1px rgba(217,119,87,.55),0 0 34px -6px rgba(217,119,87,.5),inset 0 1px 0 rgba(255,255,255,.22);animation:glow 3.2s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 18px 50px -18px rgba(0,0,0,.65),0 0 0 1px rgba(217,119,87,.3),0 0 60px -4px rgba(217,119,87,.35),inset 0 1px 0 rgba(255,255,255,.22)}}
+.now.prog.enter{animation:enter .7s cubic-bezier(.2,.9,.25,1.15) both,glow 3.2s .7s ease-in-out infinite}
+.run{margin-top:18px}
+.tmr{font-size:44px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.02em;color:var(--acc2);line-height:1}
+.pbar{height:4px;margin-top:12px;border-radius:2px;background:rgba(255,255,255,.1);overflow:hidden}
+.pbar i{display:block;height:100%;width:0;border-radius:2px;background:linear-gradient(90deg,#c25f40,#f2a483);transition:width 1s linear,background .8s}
+.plab{font-size:13px;color:var(--mut);margin-top:6px;transition:color .8s}
+.now.over .pbar i{background:var(--ok)}.now.over .tmr{color:var(--ok)}.now.over .plab{color:var(--ok)}
 .undo{display:inline-block;margin:10px 4px 0;padding:8px 12px;border-radius:12px;font-size:14px;color:var(--mut);background:transparent;border:0;font-family:inherit}
 .next{margin-top:14px;padding:16px 20px;display:flex;align-items:center;gap:14px}
 .next .k{font-size:11px;letter-spacing:.2em;color:var(--mut);text-transform:uppercase;margin-bottom:3px}
@@ -150,7 +161,7 @@ textarea{resize:vertical;min-height:64px;line-height:1.4}
 .hint{font-size:13px;color:var(--mut);padding:0 2px 12px;line-height:1.45}
 #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translate(-50%,40px);opacity:0;z-index:20;padding:12px 18px;border-radius:14px;font-size:15px;transition:all .5s cubic-bezier(.2,.9,.25,1.2);pointer-events:none;white-space:nowrap}
 #toast.on{transform:translate(-50%,0);opacity:1}
-@media (prefers-reduced-motion:reduce){.done::after,.dots i.c,.pill b{animation:none}}
+@media (prefers-reduced-motion:reduce){.done::after,.dots i.c,.pill b,.now.prog,.now.prog.enter{animation:none}}
 
 /* ---------- app shell ---------- */
 #root{padding-bottom:calc(env(safe-area-inset-bottom) + 110px)}
@@ -661,11 +672,17 @@ function frame(now){
   cx.globalCompositeOperation="source-over";
   if(now>nextRain){ripple(Math.random()*W,Math.random()*H,60+Math.random()*60,.5);touches.pop();nextRain=now+1800+Math.random()*2600}
   touches=touches.filter(function(t){return now-t.t<1200});
-  fish.forEach(function(f){
+  /* In progress: each koi steers toward its own slot on an ellipse around the
+     card, slowly rotating. A touch still scatters them; they drift back. */
+  var orb=ORB&&ORB.isConnected?ORB.getBoundingClientRect():null;
+  fish.forEach(function(f,i){
     f.turn+=(Math.random()-.5)*.012*k;f.turn*=Math.pow(.96,k);f.a+=f.turn*k;
     touches.forEach(function(t){var dx=f.x-t.x,dy=f.y-t.y,d=Math.hypot(dx,dy);if(d<170){var want=Math.atan2(dy,dx);f.a+=angDiff(f.a,want)*.12*k;f.boost=Math.max(f.boost,3.2*(1-d/170))}});
-    var m=50;if(f.x<m||f.x>W-m||f.y<m||f.y>H-m){var c=Math.atan2(H/2-f.y,W/2-f.x);f.a+=angDiff(f.a,c)*.02*k}
-    var sp=f.v*(1+f.boost);f.boost*=Math.pow(.965,k);
+    var pull=0;
+    if(orb&&f.boost<.6){var th=now*.00018+i*6.2832/fish.length,tx=orb.left+orb.width/2+Math.cos(th)*(orb.width/2+30),ty=orb.top+orb.height/2+Math.sin(th)*(orb.height/2+34),dd=Math.hypot(tx-f.x,ty-f.y);
+      f.a+=angDiff(f.a,Math.atan2(ty-f.y,tx-f.x))*.07*k;pull=Math.min(2.2,dd/140)}
+    else{var m=50;if(f.x<m||f.x>W-m||f.y<m||f.y>H-m){var c=Math.atan2(H/2-f.y,W/2-f.x);f.a+=angDiff(f.a,c)*.02*k}}
+    var sp=f.v*(1+f.boost+pull);f.boost*=Math.pow(.965,k);
     f.x+=Math.cos(f.a)*sp*k;f.y+=Math.sin(f.a)*sp*k;f.ph+=(.09+sp*.09)*k;
   });
   fish.forEach(function(f){drawFish(f,true)});
@@ -733,6 +750,7 @@ function render(animate){
   if(!S.ready) return;
   if(S.view==="ins"&&!FEATURES.insights) S.view="now";
   if(S.view!=="week") root.classList.remove("wide");
+  if(S.view!=="now") ORB=null;
   if(S.view==="week") renderWeek(animate);
   else if(S.view==="ins") renderIns(animate);
   else renderNow(animate);
@@ -774,15 +792,47 @@ function renderNow(animate){
     h+='<section class="glass tilt finished'+A+'"><h2>Τέλος για σήμερα.</h2><p>'+done+"/"+blocks.length+" έγιναν. Αρκετό. Τα ψάρια συμφωνούν.</p></section>";
     h+='<button class="undo tap" data-act="undo">↶ Αναίρεση</button>';
   }else{
-    const b=blocks[i],n=blocks[i+1];
-    h+='<section class="glass tilt now'+A+'" id="card"><div class="pill"><b></b>Τώρα</div><div class="time">'+esc(b.t)+(b.date?' · μία φορά':'')+"</div><h2>"+esc(b.n)+"</h2>"+(b.h?'<p class="how">'+esc(b.h)+"</p>":"")+dlHtml(b);
+    const b=blocks[i],n=blocks[i+1],ev=st[i],prog=ev&&ev.status==="p";
+    h+='<section class="glass tilt now'+A+(prog?" prog":"")+'" id="card"><div class="pill"><b></b>'+(prog?"Σε εξέλιξη":"Τώρα")+'</div><div class="time">'+esc(b.t)+(b.date?' · μία φορά':'')+"</div><h2>"+esc(b.n)+"</h2>"+(b.h?'<p class="how">'+esc(b.h)+"</p>":"")+dlHtml(b);
     if(b.list&&b.list.length) h+="<ul>"+b.list.map((x,q)=>'<li class="tap'+(ex[b.id+"-"+q]?" on":"")+'" data-act="ex" data-k="'+esc(b.id+"-"+q)+'"><span>'+esc(x[0])+"</span><span>"+esc(x[1]||"")+"</span></li>").join("")+"</ul>";
-    h+='<div class="btns"><button class="btn done tap" data-act="done">✓ Έγινε</button><button class="btn skip tap" data-act="skip">Παράλειψη</button></div></section>';
+    const dur=durOf(b);
+    h+=prog?'<div class="run"><div class="tmr" id="tmr">'+fmtEl(Date.now()-new Date(ev.started_at))+'</div>'+(dur?'<div class="pbar"><i id="pbar"></i></div><div class="plab" id="plab"></div>':'')+'</div>':'';
+    h+='<div class="btns">'+(!prog&&canStart(b)?'<button class="btn start tap" data-act="start">Ξεκίνα</button>':'')+'<button class="btn done tap" data-act="done">✓ Έγινε</button><button class="btn skip tap" data-act="skip">Παράλειψη</button></div></section>';
     if(hasUndo) h+='<button class="undo tap" data-act="undo">↶ Αναίρεση</button>';
     if(n) h+='<div class="glass tilt next tap'+A2+'" data-act="peek"><div><div class="k">Μετά</div><div class="t">'+esc(n.n)+'</div></div><div class="tm">'+esc(n.t)+"</div></div>";
   }
   if(FEATURES.rules) h+='<div class="glass sec'+(S.open.rules?" open":"")+'"><div class="hd tap" data-act="tog" data-s="rules"><span>Κανόνες</span><span>⌄</span></div><div class="bd">'+S.rules.map(r=>'<div class="rule tap">'+ruleHtml(r)+"</div>").join("")+"</div></div>";
   root.innerHTML=h;
+  RUN={card:document.getElementById("card"),ev:blocks[i]&&st[i]&&st[i].status==="p"?st[i]:null,b:blocks[i]||null,can:blocks[i]?canStart(blocks[i]):false};
+  ORB=RUN.ev&&!RM.matches?RUN.card:null;
+  tickRun();
+}
+/* ---------- in progress ----------
+   Ξεκίνα shows once the step's start time has come (or it has no clock time).
+   Starting writes status 'p' + started_at, so it survives reloads and other
+   devices; the card then shows a timer, and the koi gather around it. */
+const RM=matchMedia("(prefers-reduced-motion: reduce)");
+let RUN={},ORB=null;
+function canStart(b){const st=parseT(b.t);if(st.empty||st.mode==="label")return true;return dm(st.a)<=nowDM()}
+/* Planned length in minutes: a range's span, else a duration in the title ("45'", "(1h)", "3 ώρες"). */
+function durOf(b){const st=parseT(b.t);if(st.mode==="range"&&!st.empty){let d=dm(st.b)-dm(st.a);if(d<=0)d+=1440;return d}
+  const n=String(b.n),m=n.match(/(\d+)\s*['’′]/);if(m)return +m[1];const hh=n.match(/(\d+)\s*(?:h\b|ώρ|ω\b)/i);return hh?+hh[1]*60:0}
+function fmtEl(ms){const t=Math.max(0,Math.floor(ms/1000)),h=Math.floor(t/3600),m=Math.floor(t%3600/60),x=t%60,z=n=>String(n).padStart(2,"0");return h?h+":"+z(m)+":"+z(x):z(m)+":"+z(x)}
+function tickRun(){
+  if(S.view!=="now"||!RUN.card||!RUN.card.isConnected)return;
+  if(RUN.ev){const el=Date.now()-new Date(RUN.ev.started_at),t=document.getElementById("tmr");if(t)t.textContent=fmtEl(el);
+    const d=durOf(RUN.b),bar=document.getElementById("pbar");
+    if(d&&bar){const f=el/(d*60000),over=f>=1;bar.style.width=Math.min(100,f*100)+"%";RUN.card.classList.toggle("over",over);
+      const lab=document.getElementById("plab");if(lab)lab.textContent=over?"Ο χρόνος που είχες βάλει πέρασε":"από "+(d>=60?Math.floor(d/60)+"ω"+(d%60?" "+d%60+"'":""):d+"'")}}
+  else if(RUN.b&&!RUN.can&&canStart(RUN.b)&&!edOpen()&&!qf.classList.contains("open"))render(false);
+}
+setInterval(tickRun,1000);
+function startNow(btn){
+  const dk=key(today()),{list,st,cur}=dayState(dk),b=list[cur];if(!b||st[cur])return;
+  const r=btn.getBoundingClientRect();ripple(r.left+r.width/2,r.top+r.height/2,300,1.1);buzz([8,30,8]);
+  const now=new Date().toISOString(),e={id:uuid(),user_id:uid(),date:dk,pos:freePos(dk,cur),block_id:b.id,name:b.n,tag:b.tag||"other",status:"p",at:now,started_at:now};
+  S.events.push(e);track(DB.putEvent(e));render(false);
+  const c=document.getElementById("card");if(c){const q=c.getBoundingClientRect();[0,1,2,3].forEach(k=>setTimeout(()=>ripple(q.left+q.width*(k%2?.85:.15),q.top+q.height*(k<2?.2:.8),180,.6),k*120))}
 }
 function fmtDL(iso){const d=new Date(iso),t=today();const dd=new Date(d);dd.setHours(0,0,0,0);const diff=Math.round((dd-t)/864e5);
   return (diff===0?"σήμερα":diff===1?"αύριο":SHORT[d.getDay()]+" "+d.getDate()+"/"+(d.getMonth()+1))+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0")}
@@ -808,6 +858,7 @@ function undoNow(){
 root.addEventListener("click",e=>{
   const t=e.target.closest("[data-act]");if(!t)return;const a=t.dataset.act;const dk=key(today());
   if(a==="done")advance("d",t);
+  else if(a==="start")startNow(t);
   else if(a==="skip")advance("s",t);
   else if(a==="undo")undoNow();
   else if(a==="tog"){S.open[t.dataset.s]=!S.open[t.dataset.s];render(false)}
@@ -830,7 +881,8 @@ function weekDates(off){const t=today(),mon=addDays(t,-((t.getDay()+6)%7)+7*(off
 function renderWeek(animate){
   root.classList.toggle("wide",isDesk());
   if(isDesk()){renderPlanner(animate);return}
-  const tdk=key(today()),dates=weekDates(0),old=document.getElementById("wk"),keep=!animate&&old?old.scrollLeft:null;
+  /* mobile: the next seven days, today first */
+  const tdk=key(today()),dates=[0,1,2,3,4,5,6].map(i=>addDays(today(),i)),old=document.getElementById("wk"),keep=!animate&&old?old.scrollLeft:null;
   let h=header("Πρόγραμμα");
   h+='<div class="wk" id="wk">'+dates.map((d,ci)=>{const dk=key(d),wd=d.getDay(),bl=planDay(dk);
     return '<div class="glass col'+(dk===tdk?" today":"")+(animate?" enter":"")+'" style="animation-delay:'+(ci*40)+'ms"><div class="ch"><b>'+DAYS[wd]+' <small>'+d.getDate()+'/'+(d.getMonth()+1)+'</small></b><button class="ibtn dm tap" data-act="daymenu" data-wd="'+wd+'" aria-label="Επιλογές για '+DAYS[wd]+'">⋯</button></div><div class="dl">'+(bl.length?bl.map(chipHtml).join(""):'<p class="hint">Κενή μέρα.</p>')+'</div></div>'}).join("")+'</div>';
