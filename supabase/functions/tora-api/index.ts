@@ -309,7 +309,9 @@ async function callTool(name: string, a: Record<string, any>, uid: string): Prom
   throw new Error(`Άγνωστο εργαλείο: ${name}`);
 }
 
-const VERSIONS = ["2025-06-18", "2025-03-26", "2024-11-05"];
+const VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"];
+// serverInfo.icons (MCP 2025-11-25). claude.ai currently shows the URL domain's favicon instead; kept so the logo appears once clients read it.
+const ICONS = [{ src: "https://costgal.github.io/tora/icon-192.png", mimeType: "image/png", sizes: ["192x192"] }, { src: "https://costgal.github.io/tora/icon-512.png", mimeType: "image/png", sizes: ["512x512"] }];
 async function mcp(req: Request, uid: string) {
   if (req.method === "GET") return new Response("Method Not Allowed", { status: 405, headers: { Allow: "POST" } });
   if (req.method === "DELETE") return new Response(null, { status: 200 });
@@ -329,7 +331,7 @@ async function handle(m: any, uid: string) {
     case "initialize": {
       const v = VERSIONS.includes(m.params?.protocolVersion) ? m.params.protocolVersion : VERSIONS[0];
       return ok({
-        protocolVersion: v, capabilities: { tools: { listChanged: false } }, serverInfo: { name: "tora", version: "1.0.0" },
+        protocolVersion: v, capabilities: { tools: { listChanged: false } }, serverInfo: { name: "tora", title: "Τώρα", version: "1.1.0", icons: ICONS, websiteUrl: "https://costgal.github.io/tora/" },
         instructions: "Τώρα: το καθημερινό πρόγραμμα του Κώστα (βήματα με ώρα, εβδομαδιαία ή μίας φοράς). Ξεκίνα με tora_today για ημερομηνία και ids. Ώρες σε Europe/Athens. Γράφε τίτλους στα ελληνικά, σύντομους.",
       });
     }
