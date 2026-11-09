@@ -72,6 +72,17 @@ header .sp{flex:1}
 .pbar i{display:block;height:100%;width:0;border-radius:2px;background:linear-gradient(90deg,#c25f40,#f2a483);transition:width 1s linear,background .8s}
 .plab{font-size:13px;color:var(--mut);margin-top:6px;transition:color .8s}
 .now.over .pbar i{background:var(--ok)}.now.over .tmr{color:var(--ok)}.now.over .plab{color:var(--ok)}
+.inside{margin-top:16px;padding-top:12px;border-top:1px dashed rgba(255,255,255,.18)}
+.inside .k{font-size:11px;letter-spacing:.2em;color:var(--mut);text-transform:uppercase;margin-bottom:6px}
+.irow{display:flex;align-items:center;gap:10px;min-height:48px;padding:2px 6px 2px 12px;margin-top:6px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);font-size:16px;transition:background .4s,border-color .4s}
+.irow>i{width:6px;height:22px;border-radius:3px;flex:none}
+.irow .it{flex:none;font-size:13px;color:var(--mut);font-variant-numeric:tabular-nums}
+.irow .in{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.irow.due{background:rgba(217,119,87,.16);border-color:rgba(217,119,87,.55)}
+.irow.d{background:rgba(143,209,158,.12);border-color:rgba(143,209,158,.35)}.irow.d .in{text-decoration:line-through;opacity:.7}
+.irow.s{opacity:.55}.irow.s .in{text-decoration:line-through}
+.irow .ib{flex:none;width:44px;height:44px;border:0;border-radius:12px;background:rgba(255,255,255,.08);color:var(--txt);font-family:inherit;font-size:18px}
+.irow .ib.ok{background:rgba(143,209,158,.2);color:var(--ok)}
 .undo{display:inline-block;margin:10px 4px 0;padding:8px 12px;border-radius:12px;font-size:14px;color:var(--mut);background:transparent;border:0;font-family:inherit}
 .next{margin-top:14px;padding:16px 20px;display:flex;align-items:center;gap:14px}
 .next .k{font-size:11px;letter-spacing:.2em;color:var(--mut);text-transform:uppercase;margin-bottom:3px}
@@ -136,6 +147,12 @@ header .sp{flex:1}
 .arow span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .arow small{flex:none;max-width:40%;color:var(--mut);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hap{position:fixed;left:-200px;top:0;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden}
+.nestb{width:100%;display:flex;align-items:center;gap:12px;text-align:left;min-height:52px;padding:10px 14px;margin:0 0 10px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:var(--txt);font-family:inherit;font-size:15px}
+.nestb span:first-child{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.nestb small{font-size:13px;color:var(--mut);line-height:1.3}
+.nestb .sw{flex:none;width:44px;height:26px;border-radius:13px;background:rgba(255,255,255,.14);position:relative;transition:background .25s}
+.nestb .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .25s cubic-bezier(.2,.9,.25,1.1)}
+.nestb.on{border-color:rgba(217,119,87,.55);background:rgba(217,119,87,.12)}.nestb.on .sw{background:var(--acc)}.nestb.on .sw::after{transform:translateX(18px)}
 .morebd{display:none;padding-top:4px}
 .more.open+.morebd{display:block;animation:enter .4s cubic-bezier(.2,.9,.25,1.1)}
 .acts{display:flex;gap:8px;margin-top:14px}
@@ -284,6 +301,8 @@ select{width:100%;font-family:inherit;font-size:16px;color:var(--txt);background
 .qsub{color:var(--mut);margin:-8px 2px 10px}
 .qopts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
 .qopts .rowbtn{min-height:58px;white-space:normal;line-height:1.25;padding:6px 10px}
+.qopts .rowbtn.in{grid-column:1/-1;border-color:rgba(217,119,87,.55);background:rgba(217,119,87,.14)}
+.qopts .rowbtn small{display:block;font-size:12px;font-weight:400;color:var(--mut);margin-top:2px}
 .qfoot{display:flex;gap:10px;padding:12px 16px 16px}
 .qfoot .btn{flex:1}
 
@@ -321,6 +340,8 @@ body.siding #root.wide{padding-right:420px}
 .gb span{display:block;font-weight:500;overflow:hidden;text-overflow:ellipsis}
 .gb.sm{display:flex;gap:6px;align-items:baseline;padding-top:2px}.gb.sm small{display:inline}.gb.sm span{white-space:nowrap}
 .gb.once,.gu.once{border-left-style:dashed}
+.gb.in{z-index:2;background:color-mix(in srgb,var(--c) 44%,rgba(12,24,24,.94));box-shadow:0 0 0 1px rgba(255,255,255,.2),0 4px 14px -6px rgba(0,0,0,.75)}
+.gb.in small::before{content:"↳ "}
 .gb:hover{z-index:4;box-shadow:0 0 0 1px rgba(255,255,255,.25),0 6px 18px -6px rgba(0,0,0,.7)}
 .gb.sel,.gu.sel{box-shadow:0 0 0 2px var(--acc)}
 .gb.drag,.gu.drag{z-index:5;opacity:.92;box-shadow:0 0 0 2px var(--acc),0 18px 30px -10px rgba(0,0,0,.8);transition:none}
@@ -332,6 +353,7 @@ body.siding #root.wide{padding-right:420px}
 body.gdrag,body.gdrag *{cursor:grabbing!important;user-select:none}
 .col .ch b small{font-size:13px;font-weight:500;color:var(--mut);margin-left:4px}
 .bk.once{border-style:dashed;border-color:rgba(255,255,255,.22)}
+.bk.in{margin-left:16px;min-height:44px;background:rgba(255,255,255,.04);border-left:3px solid rgba(255,255,255,.22)}
 .remc{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .lsec{margin-bottom:22px}.lsec .hint{padding-bottom:8px}.lsec .warn,.hint.warn{color:#ffb4a6}
 .lurl{font-size:13px!important;font-family:ui-monospace,Menlo,monospace!important;color:var(--mut)!important;min-width:0}
@@ -595,12 +617,17 @@ function timeSort(list){
 }
 function gk(b){ return b.date||+b.weekday; }
 /* Today's sequence and where we are in it. Events match by block id; old rows
-   without one fall back to position. 'p' (in progress) still counts as current. */
+   without one fall back to position. 'p' (in progress) still counts as current.
+   Nested steps (b.nested, covered by another step's window) are not part of
+   the sequence: they hang off their host in `inn`. */
 function dayState(dk){
-  const list=planDay(dk),evs=S.events.filter(e=>e.date===dk);
+  const all=planDay(dk),w=windows(all),evs=S.events.filter(e=>e.date===dk);
+  const list=all.filter(b=>!w[b.id].in);
   const st=list.map((b,i)=>evs.find(e=>e.block_id===b.id)||evs.find(e=>!e.block_id&&e.pos===i)||null);
   let cur=st.findIndex(e=>!e||e.status==="p"); if(cur<0) cur=list.length;
-  return {list,st,cur};
+  /* inn: host id -> its nested steps, each with its own ✓/skip event (never the host's start) */
+  const inn={};all.forEach(b=>{const h=w[b.id].in;if(h)(inn[h]=inn[h]||[]).push({b,ev:evs.find(e=>e.block_id===b.id)||null})});
+  return {list,st,cur,inn};
 }
 function freePos(dk,i){ const used=S.events.filter(e=>e.date===dk).map(e=>e.pos); return used.indexOf(i)<0?i:Math.max(100,...used)+1; }
 function track(p){ S.pending++; syncDot(); return Promise.resolve(p).then(()=>{ S.err=false; },e=>{ S.err=true; toast('Δεν αποθηκεύτηκε: '+(navigator.onLine===false?'offline':e.message)); }).finally(()=>{ S.pending--; syncDot(); }); }
@@ -619,7 +646,7 @@ async function loadAll(){
 /* Re-number a day's blocks 0..n-1 and write the whole day. Days are short
    (≤ ~15 rows), so writing all of them keeps the client logic trivial. */
 function rowOf(b){ return {id:b.id,user_id:uid(),weekday:+b.weekday,pos:Math.max(0,Math.round(b.pos)||0),t:b.t||'',n:b.n||'Βήμα',h:b.h||'',list:b.list&&b.list.length?b.list:null,tag:b.tag||'other',
-  date:b.date||null,deadline:b.deadline||null,remind_min:b.remind_min&&b.remind_min.length?b.remind_min:null,replaces:b.replaces||null,updated_at:new Date().toISOString()}; }
+  date:b.date||null,deadline:b.deadline||null,remind_min:b.remind_min&&b.remind_min.length?b.remind_min:null,replaces:b.replaces||null,nested:!!b.nested,updated_at:new Date().toISOString()}; }
 /* keys: weekdays (numbers) and/or one-off dates ('YYYY-MM-DD'). Template days
    are renumbered; one-off rows keep their anchor pos. */
 function saveDays(keys, deletedIds){
@@ -794,7 +821,7 @@ function renderAuth(msg){
 
 /* ---------- Τώρα ---------- */
 function renderNow(animate){
-  const d=today(),dk=key(d),{list:blocks,st,cur:i}=dayState(dk);
+  const d=today(),dk=key(d),{list:blocks,st,cur:i,inn}=dayState(dk);
   const ex=ld("tora-ex-"+dk,{});
   let h=header();
   h+='<div class="dots">'+blocks.map((b,j)=>'<i class="'+(st[j]?st[j].status:"")+(j===i?" c":"")+'"></i>').join("")+"</div>";
@@ -810,6 +837,7 @@ function renderNow(animate){
     const b=blocks[i],n=blocks[i+1],ev=st[i],prog=ev&&ev.status==="p";
     h+='<section class="glass tilt now'+A+(prog?" prog":"")+'" id="card"><div class="pill"><b></b>'+(prog?"Σε εξέλιξη":"Τώρα")+'</div><div class="time">'+esc(b.t)+(b.date?' · μία φορά':'')+"</div><h2>"+esc(b.n)+"</h2>"+(b.h?'<p class="how">'+esc(b.h)+"</p>":"")+dlHtml(b);
     if(b.list&&b.list.length) h+="<ul>"+b.list.map((x,q)=>'<li class="tap'+(ex[b.id+"-"+q]?" on":"")+'" data-act="ex" data-k="'+esc(b.id+"-"+q)+'"><span>'+esc(x[0])+"</span><span>"+esc(x[1]||"")+"</span></li>").join("")+"</ul>";
+    h+=insideHtml(inn[b.id]);
     const dur=durOf(b);
     h+=prog?'<div class="run"><div class="tmr" id="tmr">'+fmtEl(Date.now()-new Date(ev.started_at))+'</div>'+(dur?'<div class="pbar"><i id="pbar"></i></div><div class="plab" id="plab"></div>':'')+'</div>':'';
     h+='<div class="btns">'+(!prog&&canStart(b)?'<button class="btn start tap" data-act="start">Ξεκίνα</button>':'')+'<button class="btn done tap" data-act="done">✓ Έγινε</button><button class="btn skip tap" data-act="skip">Παράλειψη</button></div></section>';
@@ -818,7 +846,8 @@ function renderNow(animate){
   }
   if(FEATURES.rules) h+='<div class="glass sec'+(S.open.rules?" open":"")+'"><div class="hd tap" data-act="tog" data-s="rules"><span>Κανόνες</span><span>⌄</span></div><div class="bd">'+S.rules.map(r=>'<div class="rule tap">'+ruleHtml(r)+"</div>").join("")+"</div></div>";
   root.innerHTML=h;
-  RUN={card:document.getElementById("card"),ev:blocks[i]&&st[i]&&st[i].status==="p"?st[i]:null,b:blocks[i]||null,can:blocks[i]?canStart(blocks[i]):false};
+  RUN={card:document.getElementById("card"),ev:blocks[i]&&st[i]&&st[i].status==="p"?st[i]:null,b:blocks[i]||null,can:blocks[i]?canStart(blocks[i]):false,inn:blocks[i]?inn[blocks[i].id]||[]:[]};
+  RUN.due=dueN(RUN.inn);
   ORB=RUN.ev&&!RM.matches?RUN.card:null;
   tickRun();
 }
@@ -833,8 +862,26 @@ function canStart(b){const st=parseT(b.t);if(st.empty||st.mode==="label")return 
 function durOf(b){const st=parseT(b.t);if(st.mode==="range"&&!st.empty){let d=dm(st.b)-dm(st.a);if(d<=0)d+=1440;return d}
   const n=String(b.n),m=n.match(/(\d+)\s*['’′]/);if(m)return +m[1];const hh=n.match(/(\d+)\s*(?:h\b|ώρ|ω\b)/i);return hh?+hh[1]*60:0}
 function fmtEl(ms){const t=Math.max(0,Math.floor(ms/1000)),h=Math.floor(t/3600),m=Math.floor(t%3600/60),x=t%60,z=n=>String(n).padStart(2,"0");return h?h+":"+z(m)+":"+z(x):z(m)+":"+z(x)}
+/* Steps that happen inside the current one («Φαγητό» during «Δουλειά»). They get
+   their own ✓ / Παράλειψη event and never touch the host's start or timer. */
+function dueN(l){return (l||[]).filter(x=>!x.ev&&canStart(x.b)).length}
+function insideHtml(l){
+  if(!l||!l.length)return"";
+  return '<div class="inside"><div class="k">Μέσα σε αυτό</div>'+l.map(x=>{const e=x.ev,due=!e&&canStart(x.b);
+    return '<div class="irow'+(e?" "+e.status:"")+(due?" due":"")+'"><i style="background:'+tagc(x.b.tag)+'"></i><span class="it">'+esc(x.b.t)+'</span><span class="in">'+esc(x.b.n)+'</span>'+
+      (e?'<button class="ib tap" data-act="iundo" data-bid="'+x.b.id+'" aria-label="Αναίρεση">↶</button>'
+        :'<button class="ib ok tap" data-act="idone" data-bid="'+x.b.id+'" aria-label="Έγινε">✓</button><button class="ib tap" data-act="iskip" data-bid="'+x.b.id+'" aria-label="Παράλειψη">⤼</button>')+'</div>'}).join("")+'</div>'}
+function markInside(bid,mark,btn){
+  const dk=key(today()),b=S.blocks.find(x=>x.id===bid),prev=S.events.find(e=>e.date===dk&&e.block_id===bid);if(!b)return;
+  if(mark==="u"){if(prev){S.events=S.events.filter(x=>x!==prev);track(DB.delEvent(dk,prev.pos))}render(false);buzz(5);return}
+  const r=btn.getBoundingClientRect();ripple(r.left+r.width/2,r.top+r.height/2,200,.8);buzz(mark==="d"?[8,30,8]:6);
+  const now=new Date().toISOString(),used=S.events.filter(e=>e.date===dk).map(e=>e.pos);
+  const e=prev?Object.assign({},prev,{status:mark,at:now}):{id:uuid(),user_id:uid(),date:dk,pos:Math.max(100,...used)+1,block_id:b.id,name:b.n,tag:b.tag||"other",status:mark,at:now,started_at:null};
+  S.events=S.events.filter(x=>x!==prev).concat(e);track(DB.putEvent(e));render(false);
+}
 function tickRun(){
   if(S.view!=="now"||!RUN.card||!RUN.card.isConnected)return;
+  if(RUN.inn&&dueN(RUN.inn)!==RUN.due&&!edOpen()&&!qf.classList.contains("open")){render(false);return}
   if(RUN.ev){const el=Date.now()-new Date(RUN.ev.started_at),t=document.getElementById("tmr");if(t)t.textContent=fmtEl(el);
     const d=durOf(RUN.b),bar=document.getElementById("pbar");
     if(d&&bar){const f=el/(d*60000),over=f>=1;bar.style.width=Math.min(100,f*100)+"%";RUN.card.classList.toggle("over",over);
@@ -876,6 +923,9 @@ root.addEventListener("click",e=>{
   else if(a==="start")startNow(t);
   else if(a==="skip")advance("s",t);
   else if(a==="undo")undoNow();
+  else if(a==="idone")markInside(t.dataset.bid,"d",t);
+  else if(a==="iskip")markInside(t.dataset.bid,"s",t);
+  else if(a==="iundo")markInside(t.dataset.bid,"u",t);
   else if(a==="tog"){S.open[t.dataset.s]=!S.open[t.dataset.s];render(false)}
   else if(a==="ex"){const ek="tora-ex-"+dk,ex=ld(ek,{}),k=t.dataset.k;ex[k]=!ex[k];sv(ek,ex);t.classList.toggle("on",!!ex[k]);buzz(ex[k]?[8,30,8]:5)}
   else if(a==="peek"){t.animate([{transform:"translateX(0)"},{transform:"translateX(8px)"},{transform:"translateX(-5px)"},{transform:"translateX(0)"}],{duration:420,easing:"ease-out"})}
@@ -890,7 +940,7 @@ root.addEventListener("click",e=>{
 const GEN=["της Κυριακής","της Δευτέρας","της Τρίτης","της Τετάρτης","της Πέμπτης","της Παρασκευής","του Σαββάτου"];
 function tagc(t){return (TAGS[t]||TAGS.other)[1]}
 function dayIn(wd){return (wd===6?"στο ":"στην ")+DAYS[wd]}
-function chipHtml(b){return '<div class="bk tap'+(b.date?' once':'')+'" data-act="blk" data-bid="'+b.id+'"><span class="tg" style="background:'+tagc(b.tag)+'"></span><span class="bn">'+esc(b.n)+'</span>'+(b.date?'<span class="bl">1×</span>':'')+'<span class="bt">'+esc(b.t)+'</span></div>'}
+function chipHtml(b,inside){return '<div class="bk tap'+(b.date?' once':'')+(inside?' in':'')+'" data-act="blk" data-bid="'+b.id+'"><span class="tg" style="background:'+tagc(b.tag)+'"></span><span class="bn">'+(inside?'↳ ':'')+esc(b.n)+'</span>'+(b.date?'<span class="bl">1×</span>':'')+'<span class="bt">'+esc(b.t)+'</span></div>'}
 /* Monday-first dates of the week containing today, shifted by off weeks. */
 function weekDates(off){const t=today(),mon=addDays(t,-((t.getDay()+6)%7)+7*(off||0));return [0,1,2,3,4,5,6].map(i=>addDays(mon,i))}
 function renderWeek(animate){
@@ -899,8 +949,8 @@ function renderWeek(animate){
   /* mobile: the next seven days, today first */
   const tdk=key(today()),dates=[0,1,2,3,4,5,6].map(i=>addDays(today(),i)),old=document.getElementById("wk"),keep=!animate&&old?old.scrollLeft:null;
   let h=header("Πρόγραμμα");
-  h+='<div class="wk" id="wk">'+dates.map((d,ci)=>{const dk=key(d),wd=d.getDay(),bl=planDay(dk);
-    return '<div class="glass col'+(dk===tdk?" today":"")+(animate?" enter":"")+'" style="animation-delay:'+(ci*40)+'ms"><div class="ch"><b>'+DAYS[wd]+' <small>'+d.getDate()+'/'+(d.getMonth()+1)+'</small></b><button class="ibtn dm tap" data-act="daymenu" data-wd="'+wd+'" aria-label="Επιλογές για '+DAYS[wd]+'">⋯</button></div><div class="dl">'+(bl.length?bl.map(chipHtml).join(""):'<p class="hint">Κενή μέρα.</p>')+'</div></div>'}).join("")+'</div>';
+  h+='<div class="wk" id="wk">'+dates.map((d,ci)=>{const dk=key(d),wd=d.getDay(),bl=planDay(dk),bw=windows(bl);
+    return '<div class="glass col'+(dk===tdk?" today":"")+(animate?" enter":"")+'" style="animation-delay:'+(ci*40)+'ms"><div class="ch"><b>'+DAYS[wd]+' <small>'+d.getDate()+'/'+(d.getMonth()+1)+'</small></b><button class="ibtn dm tap" data-act="daymenu" data-wd="'+wd+'" aria-label="Επιλογές για '+DAYS[wd]+'">⋯</button></div><div class="dl">'+(bl.length?bl.map(b=>chipHtml(b,bw[b.id].in)).join(""):'<p class="hint">Κενή μέρα.</p>')+'</div></div>'}).join("")+'</div>';
   if(FEATURES.insights) h+=calendarHtml();
   if(FEATURES.rules) h+='<div class="glass sec open" style="margin-top:14px"><div class="hd tap" data-act="rules"><span>Κανόνες</span><span>✎</span></div><div class="bd">'+S.rules.map(r=>'<div class="rule">'+ruleHtml(r)+"</div>").join("")+"</div></div>";
   h+=footHtml();
@@ -937,10 +987,12 @@ function renderPlanner(animate){
   h+='<div class="pg-u"><div class="ax"></div>'+days.map(x=>'<div class="uc" data-dk="'+x.dk+'" data-wd="'+x.wd+'">'+x.list.filter(b=>x.w[b.id].untimed).map(b=>'<div class="gu'+(b.date?" once":"")+'" data-gb="'+b.id+'" style="--c:'+tagc(b.tag)+'"><small>'+esc(b.t||"·")+'</small> '+esc(b.n)+'</div>').join("")+'</div>').join("")+'</div>';
   let ax='';for(let k=h0;k<h1;k++)ax+='<span style="top:'+((k-h0)*HPX)+'px">'+String(k%24).padStart(2,"0")+':00</span>';
   h+='<div class="pg-b" style="--hh:'+HPX+'px;height:'+((h1-h0)*HPX)+'px"><div class="ax">'+ax+'</div>'+days.map(x=>{
-    const timed=x.list.filter(b=>!x.w[b.id].untimed),L=laneMap(timed.map(b=>({id:b.id,s:x.w[b.id].s,e:x.w[b.id].ve})));
+    const timed=x.list.filter(b=>!x.w[b.id].untimed),L=laneMap(timed.filter(b=>!x.w[b.id].in).map(b=>({id:b.id,s:x.w[b.id].s,e:x.w[b.id].ve})));
     let c='<div class="dc'+(x.dk===tdk?" today":"")+'" data-dk="'+x.dk+'" data-wd="'+x.wd+'">';
-    timed.forEach(b=>{const v=x.w[b.id],l=L[b.id],top=(v.s-h0*60)/60*HPX,ht=Math.max(16,(v.ve-v.s)/60*HPX-2);
-      c+='<div class="gb'+(b.date?" once":"")+(ht<36?" sm":"")+'" data-gb="'+b.id+'" style="top:'+top+'px;height:'+ht+'px;left:calc('+(l.lane/l.n*100)+'% + 2px);width:calc('+(100/l.n)+'% - 4px);--c:'+tagc(b.tag)+'"><small>'+esc(b.t)+'</small><span>'+esc(b.n)+'</span><i class="rz"></i></div>'});
+    timed.forEach(b=>{const v=x.w[b.id],l=L[v.in||b.id],top=(v.s-h0*60)/60*HPX,ht=Math.max(v.in?24:16,(v.ve-v.s)/60*HPX-2);
+      /* nested: sits on the right part of its host's lane, on top of it */
+      const pos=v.in?'left:calc('+((l.lane+.34)/l.n*100)+'% + 2px);width:calc('+(.64/l.n*100)+'% - 4px)':'left:calc('+(l.lane/l.n*100)+'% + 2px);width:calc('+(100/l.n)+'% - 4px)';
+      c+='<div class="gb'+(b.date?" once":"")+(v.in?" in":"")+(ht<36?" sm":"")+'" data-gb="'+b.id+'" style="top:'+top+'px;height:'+ht+'px;'+pos+';--c:'+tagc(b.tag)+'"><small>'+esc(b.t)+'</small><span>'+esc(b.n)+'</span><i class="rz"></i></div>'});
     if(x.dk===tdk){const nm=nowDM();if(nm>=h0*60&&nm<h1*60)c+='<i class="nowl" style="top:'+((nm-h0*60)/60*HPX)+'px"></i>'}
     return c+'</div>'}).join("")+'</div></div>';
   h+=footHtml();
@@ -1085,11 +1137,26 @@ function placeByTime(b){
    day minutes (00:00–03:59 count as 24:00–27:59). Shared by the desktop grid
    and the add flow's clash check. */
 function windows(list){
-  const w={},starts=[];
+  const w={},raw={};
   list.forEach(b=>{const st=parseT(b.t);if(st.mode==="label"||st.empty){w[b.id]={untimed:true};return}
-    const s=dm(st.a);let e=null;if(st.mode==="range"){e=dm(st.b);if(e<=s)e+=1440}w[b.id]={s,e,range:st.mode==="range",approx:st.approx};starts.push(s)});
-  list.forEach(b=>{const x=w[b.id];if(x.untimed)return;if(x.e!=null){x.ve=x.e;return}const nx=starts.filter(v=>v>x.s),n=nx.length?Math.min(...nx):null;
-    x.e=n!=null?Math.max(x.s+30,n):x.s+60; x.ve=n!=null?Math.max(x.s+15,n):x.s+60});
+    const s=dm(st.a);let e=null;if(st.mode==="range"){e=dm(st.b);if(e<=s)e+=1440}raw[b.id]={s,e,range:st.mode==="range",approx:st.approx}});
+  const timed=list.filter(b=>raw[b.id]),nest=new Set(timed.filter(b=>b.nested).map(b=>b.id));
+  const span=(x,starts)=>{if(x.e!=null)return{e:x.e,ve:x.e};const nx=starts.filter(v=>v>x.s),n=nx.length?Math.min(...nx):null;
+    return n!=null?{e:Math.max(x.s+30,n),ve:Math.max(x.s+15,n)}:{e:x.s+60,ve:x.s+60}};
+  /* A nested step ("φαγητό" inside "δουλειά") doesn't cut its host's window and
+     belongs to the step that covers its start (w[id].in). One no step covers is
+     a normal step. Dropping it from `nest` can only shorten hosts, so repeat. */
+  let sp,host;
+  for(;;){
+    const starts=timed.filter(b=>!nest.has(b.id)).map(b=>raw[b.id].s);
+    sp={};timed.forEach(b=>{sp[b.id]=span(raw[b.id],starts)});
+    host={};const out=[];
+    nest.forEach(id=>{const x=raw[id],h=timed.find(o=>!nest.has(o.id)&&raw[o.id].s<=x.s&&x.s<sp[o.id].ve);if(h)host[id]=h.id;else out.push(id)});
+    if(!out.length)break;out.forEach(id=>nest.delete(id));
+  }
+  timed.forEach(b=>{const x=raw[b.id],h=host[b.id];
+    const v=h&&x.e==null?{e:x.s+30,ve:x.s+30}:sp[b.id];
+    w[b.id]={s:x.s,e:v.e,ve:v.ve,range:x.range,approx:x.approx};if(h)w[b.id].in=h});
   return w;
 }
 function hm(m){m=((m%1440)+1440)%1440;return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0")}
@@ -1219,14 +1286,15 @@ function dateLabel(dk){const d=parseKey(dk),diff=Math.round((d-today())/864e5);r
 function openBlock(id,pre,focus){
   pre=pre||{};
   const ex=id?S.blocks.find(x=>x.id===id):null; if(id&&!ex) return;
-  const b=ex||{id:null,weekday:pre.date?parseKey(pre.date).getDay():(pre.weekday!=null?+pre.weekday:today().getDay()),date:pre.date||null,t:pre.t||"",n:"",h:"",tag:"other",list:null,deadline:null,remind_min:null,replaces:null};
-  let tag=b.tag||"other",tagTouched=!!id,once=!!b.date,nd=+b.weekday,ndate=b.date||pre.ndate||key(nextDateFor(b.weekday)),rem=(b.remind_min||[]).slice();
+  const b=ex||{id:null,weekday:pre.date?parseKey(pre.date).getDay():(pre.weekday!=null?+pre.weekday:today().getDay()),date:pre.date||null,t:pre.t||"",n:"",h:"",tag:"other",list:null,deadline:null,remind_min:null,replaces:null,nested:false};
+  let nest=!!b.nested,tag=b.tag||"other",tagTouched=!!id,once=!!b.date,nd=+b.weekday,ndate=b.date||pre.ndate||key(nextDateFor(b.weekday)),rem=(b.remind_min||[]).slice();
   const ln=(b.list||[]).length,more=b.h||ln||b.deadline;
   const sum=more?esc([b.h?b.h.slice(0,46)+(b.h.length>46?"…":""):"",ln?ln+" στη λίστα":"",b.deadline?"προθεσμία "+fmtDL(b.deadline):""].filter(Boolean).join(" · ")):"Περιγραφή, λίστα, προθεσμία";
   openSheet('<div class="sheet glass"><div class="grab"></div><div class="edtop"><button class="txtbtn tap" data-e="close">Άκυρο</button><div class="ttl">'+(id?"Βήμα":"Νέο βήμα")+'</div><button class="txtbtn strong tap" data-e="save">Τέλος</button></div><div class="edbody">'+
    '<div class="r2"><input id="fn" class="big" value="'+esc(b.n)+'" placeholder="Τίτλος" enterkeyhint="done" autocomplete="off" autocapitalize="sentences">'+tbtnHtml(b.t,"ftb")+'</div><div id="tpw" hidden></div>'+
    '<div class="tagsel" id="tg">'+Object.keys(TAGS).map(k=>'<button class="tap'+(k===tag?" on":"")+'" data-tag="'+k+'"><i style="background:'+TAGS[k][1]+'"></i>'+TAGS[k][0]+'</button>').join("")+'</div>'+
    '<div class="seg mini" id="fq"><button class="tap'+(once?"":" on")+'" data-q="w">Κάθε εβδομάδα</button><button class="tap'+(once?" on":"")+'" data-q="o">Μία φορά</button></div><div id="fwhen"></div>'+
+   '<button type="button" class="nestb tap'+(nest?" on":"")+'" data-e="nest"><span><b>Γίνεται μέσα σε άλλο βήμα</b><small>π.χ. φαγητό στη δουλειά. Δεν διακόπτει το «Ξεκίνα» του άλλου.</small></span><i class="sw"></i></button>'+
    '<button class="more tap'+(more?" has":"")+'" data-e="more"><span><b>Λεπτομέρειες</b><small>'+sum+'</small></span><span class="ch">⌄</span></button>'+
    '<div class="morebd"><div class="lbl">Τι κάνεις ακριβώς</div><textarea id="fh">'+esc(b.h)+'</textarea><div class="lbl">Λίστα · μία ανά γραμμή, «Άσκηση | 3×10»</div><textarea id="fl">'+esc(listToText(b.list))+'</textarea>'+
    '<div class="lbl">Προθεσμία</div><input type="datetime-local" id="fdl" value="'+toLocalInput(b.deadline)+'"><div class="remc" id="frem"></div></div>'+
@@ -1249,7 +1317,7 @@ function openBlock(id,pre,focus){
     if(once){const dv=q("#fdate");if(dv&&dv.value)ndate=dv.value}
     const ng=once?ndate:nd,dlv=q("#fdl").value;
     const sn=snap(og!=null?[og,ng]:[ng]);
-    Object.assign(b,{n:fn.value.trim()||"Βήμα",t:tval,h:q("#fh").value.trim(),tag:tag,list:textToList(q("#fl").value)});
+    Object.assign(b,{n:fn.value.trim()||"Βήμα",t:tval,h:q("#fh").value.trim(),tag:tag,list:textToList(q("#fl").value),nested:nest});
     if(!b.list.length) b.list=null;
     const hadRem=!!(b.deadline&&b.remind_min&&b.remind_min.length);
     b.deadline=dlv?new Date(dlv).toISOString():null; b.remind_min=b.deadline&&rem.length?rem.slice().sort((x,y)=>y-x):null;
@@ -1270,6 +1338,7 @@ function openBlock(id,pre,focus){
     const rb=e.target.closest("[data-rem]");if(rb){const v=+rb.dataset.rem;if(!v)rem=[];else{const i=rem.indexOf(v);if(i>=0)rem.splice(i,1);else rem.push(v)}drawRem();buzz(5);return}
     const t=e.target.closest("[data-e]");if(!t)return;const a=t.dataset.e;
     if(a==="close"){closeEd();return}
+    if(a==="nest"){nest=!nest;t.classList.toggle("on",nest);buzz(5);return}
     if(a==="more"){t.classList.toggle("open");HOST.querySelectorAll(".morebd textarea").forEach(grow);return}
     if(a==="save"){save();return}
     const g=gk(b);
@@ -1282,15 +1351,17 @@ function openBlock(id,pre,focus){
 const qf=document.createElement("div");qf.id="qf";document.body.appendChild(qf);
 function clashes(list,t){
   const st=parseT(t);if(st.mode==="label"||st.empty)return {hits:[]};
-  const w=windows(list),s=dm(st.a);let e;
+  const w=windows(list),s=dm(st.a),top=list.filter(b=>!w[b.id].untimed&&!w[b.id].in);let e;
   if(st.mode==="range"){e=dm(st.b);if(e<=s)e+=1440}
-  else{const nx=list.map(b=>w[b.id]).filter(v=>!v.untimed&&v.s>s).map(v=>v.s);e=nx.length?Math.max(s+30,Math.min(...nx)):s+60}
-  return {hits:list.filter(b=>{const v=w[b.id];return !v.untimed&&s<v.e&&v.s<e})};
+  else{const nx=top.map(b=>w[b.id]).filter(v=>v.s>s).map(v=>v.s);e=nx.length?Math.max(s+30,Math.min(...nx)):s+60}
+  return {hits:top.filter(b=>{const v=w[b.id];return s<v.e&&v.s<e}),s,w};
 }
 function addFlow(){
   const Q={n:"",tag:"other",tagT:false,once:true,date:key(today()),wds:new Set([today().getDay()]),t:"",dl:"",dlt:"",rem:[],step:0};
   const targets=()=>Q.once?[{k:Q.date,list:planDay(Q.date)}]:[...Q.wds].sort((a,b)=>ORDER.indexOf(a)-ORDER.indexOf(b)).map(wd=>({k:wd,list:dayBlocks(wd)}));
   const clashAll=()=>targets().map(x=>Object.assign(x,clashes(x.list,Q.t))).filter(x=>x.hits.length);
+  /* «Μέσα σε»: offered when the new step starts inside every step it clashes with */
+  const canNest=cs=>cs.every(x=>x.hits.some(h=>{const v=x.w[h.id];return v.s<=x.s&&x.s<v.ve}));
   const steps=()=>["what","when","time","dl"].concat(clashAll().length?["place"]:[]);
   const tomorrow=key(addDays(today(),1));
   let tp=null;
@@ -1307,7 +1378,7 @@ function addFlow(){
       (Q.dl?'<div class="lbl">Ώρα</div><input type="time" id="qdt" class="qtime" value="'+(Q.dlt||"18:00")+'"><div class="lbl">Υπενθύμιση</div><div class="qchips">'+REM.map(r=>'<button class="chipb tap'+(Q.rem.indexOf(r[0])>=0?" on":"")+'" data-rem="'+r[0]+'">'+r[1]+'</button>').join("")+'<button class="chipb tap'+(Q.rem.length?"":" on")+'" data-rem="0">Καμία</button></div>':'');
     if(cur==="place"){const cs=clashAll(),names=[...new Set(cs.flatMap(x=>x.hits.map(h=>h.n)))],one=names.length===1?names[0]:null,X=one?"«"+esc(one)+"»":"";
       b='<h2>Πού να μπει;</h2><p class="qsub">Πέφτει πάνω σε:</p><div class="agenda">'+cs.map(x=>x.hits.map(h=>'<div class="arow"><i style="background:'+tagc(h.tag)+'"></i><span>'+esc(h.n)+'</span><small>'+(typeof x.k==="number"?SHORT[x.k]+" · ":"")+esc(h.t)+'</small></div>').join("")).join("")+'</div>'+
-      '<div class="qopts"><button class="rowbtn tap" data-place="before">Πριν από '+(X||"αυτό")+'</button><button class="rowbtn tap" data-place="after">Μετά από '+(X||"αυτό")+'</button><button class="rowbtn tap" data-place="replace">Αντικατάστασε '+(X?"το "+X:"αυτό")+'</button><button class="rowbtn tap" data-place="both">Και τα δύο</button></div>'}
+      '<div class="qopts">'+(canNest(cs)?'<button class="rowbtn tap in" data-place="inside">Μέσα σε '+(X||"αυτό")+'<small>σαν διάλειμμα, δεν το διακόπτει</small></button>':'')+'<button class="rowbtn tap" data-place="before">Πριν από '+(X||"αυτό")+'</button><button class="rowbtn tap" data-place="after">Μετά από '+(X||"αυτό")+'</button><button class="rowbtn tap" data-place="replace">Αντικατάστασε '+(X?"το "+X:"αυτό")+'</button><button class="rowbtn tap" data-place="both">Και τα δύο</button></div>'}
     qf.innerHTML='<div class="qin glass"><div class="qtop"><button class="ibtn tap" data-q="close" aria-label="Κλείσιμο">✕</button><div class="qdots">'+st.map((_,i)=>'<i class="'+(i<Q.step?"d":i===Q.step?"c":"")+'"></i>').join("")+'</div><span style="width:42px"></span></div>'+
       '<div class="qbody" data-step="'+cur+'">'+b+'</div>'+
       (cur==="place"?'<div class="qfoot"><button class="btn skip tap" data-q="back">Πίσω</button></div>':'<div class="qfoot">'+(Q.step?'<button class="btn skip tap" data-q="back">Πίσω</button>':'')+'<button class="btn done tap" data-q="next">'+(last?"Προσθήκη":"Επόμενο")+'</button></div>')+'</div>';
@@ -1330,12 +1401,12 @@ function addFlow(){
   }
   function close(){qf.classList.remove("open");qf.innerHTML="";qf.onclick=null;document.removeEventListener("keydown",onKey)}
   function finish(place){
-    const ts=targets(),keys=ts.map(x=>x.k),cs=place==="both"?[]:clashAll(),sn=snap(keys),del=[];
+    const ts=targets(),keys=ts.map(x=>x.k),cs=place==="both"||place==="inside"?[]:clashAll(),sn=snap(keys),del=[];
     let dl=null;if(Q.dl){dl=new Date(Q.dl+"T"+(Q.dlt||"18:00")).toISOString()}
     let firstId=null;
     ts.forEach(x=>{
       const hits=(cs.find(c=>c.k===x.k)||{hits:[]}).hits;
-      const nb={id:uuid(),user_id:uid(),weekday:Q.once?parseKey(Q.date).getDay():x.k,date:Q.once?Q.date:null,pos:0,t:Q.t,n:Q.n.trim(),h:"",tag:Q.tag,list:null,deadline:dl,remind_min:dl&&Q.rem.length?Q.rem.slice().sort((a,b)=>b-a):null,replaces:null};
+      const nb={id:uuid(),user_id:uid(),weekday:Q.once?parseKey(Q.date).getDay():x.k,date:Q.once?Q.date:null,pos:0,t:Q.t,n:Q.n.trim(),h:"",tag:Q.tag,list:null,deadline:dl,remind_min:dl&&Q.rem.length?Q.rem.slice().sort((a,b)=>b-a):null,replaces:null,nested:place==="inside"};
       firstId=firstId||nb.id;
       let L=x.list.slice(),idx=null;
       if(hits.length&&place!=="both"){

@@ -49,6 +49,8 @@ Demo mode runs when you open the page via `file://` or with `?demo`. It needs no
 - **Weekly template**: `date` is null. Rows are ordered by `pos`.
 - **One-off**: `date` is set, and `weekday` is still filled. Its `pos` is an *anchor*, meaning the index among that day's template rows that it sits before. Setting `replaces = <template id>` hides that template row on that date only; this is "Αντικατάστασε" for a one-off.
 
+A row with `nested=true` happens *inside* another step (e.g. «Φαγητό» during «Δουλειά»). The host is never stored: it is the non-nested step whose window covers the nested step's start (`windows()` sets `w[id].in`). If none covers it, the step is a normal one. Nested steps are not part of the Τώρα sequence: `dayState()` leaves them out of `list` and returns them in `inn[hostId]`; they have their own ✓ / skip event (`block_id`, pos ≥ 100) and never touch the host's start or timer. They don't cut the host's window, and `clashes()` ignores them. UI: switch in the step editor, «Μέσα σε …» option on the add flow's clash screen, drawn on top of the host's lane in the desktop grid and as an indented `↳` chip on mobile.
+
 Each row may also have a `deadline` (timestamptz) and `remind_min` (a subset of {60,30,15}).
 
 Helper functions:
@@ -56,7 +58,7 @@ Helper functions:
 - `planDay('YYYY-MM-DD')` returns template + one-offs merged. This is what Τώρα and both Πρόγραμμα views show.
 - `saveDays(keys, deletedIds)` takes weekdays (numbers) and/or dates (strings). It renumbers template days to 0..n-1 and upserts one-off rows with their anchor. Every edit goes through it, and `snap(keys)` / `restore()` give undo.
 - `placeByTime(b)` puts a block in time order.
-- `windows(list)` gives each block its span. A range uses its own span. A single time runs until the next start, with a 30' minimum (`e`, used for clashes), and is drawn until the next start (`ve`). Words are untimed. Times before 04:00 count as the end of the day.
+- `windows(list)` gives each block its span (nested steps excluded from the host's end). A range uses its own span. A single time runs until the next start, with a 30' minimum (`e`, used for clashes), and is drawn until the next start (`ve`). Words are untimed. Times before 04:00 count as the end of the day.
 
 **`tora_events`**: `status` is `d` / `s` / `p`, and `started_at` is set when started. Events are matched to blocks by `block_id`; legacy rows fall back to `pos`. `pos` is unique per date (`freePos`).
 

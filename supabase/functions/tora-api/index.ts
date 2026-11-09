@@ -22,7 +22,7 @@ const BYDAY = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
 type Block = {
   id: string; user_id: string; weekday: number; pos: number; t: string; n: string; h: string;
   list: [string, string][] | null; tag: string; date: string | null; deadline: string | null;
-  remind_min: number[] | null; replaces: string | null;
+  remind_min: number[] | null; replaces: string | null; nested?: boolean;
 };
 type Ev = { id?: string; user_id: string; date: string; pos: number; block_id: string | null; name: string; tag: string; status: string; at: string; started_at: string | null };
 
@@ -84,22 +84,36 @@ function normT(t: string | undefined) {
 const dm = (hm: string) => { const [h, m] = hm.split(":").map(Number); const x = h * 60 + m; return x < 240 ? x + 1440 : x; };
 const WORDM: Record<string, number> = { "πρωί": 480, "μεσημέρι": 780, "απόγευμα": 1020, "βράδυ": 1260 };
 function ordM(t: string) { const p = parseT(t); if (p.mode === "empty") return null; if (p.mode === "label") return WORDM[p.label!] ?? null; return dm(p.a!); }
-type W = { untimed: boolean; s: number; e: number; ve: number };
+type W = { untimed: boolean; s: number; e: number; ve: number; in?: string };
 function windows(list: Block[]) {
-  const w: Record<string, W> = {}; const starts: number[] = [];
-  const pre: Record<string, { s: number; e: number | null }> = {};
+  const w: Record<string, W> = {};
+  const raw: Record<string, { s: number; e: number | null }> = {};
   for (const b of list) {
     const p = parseT(b.t);
     if (p.mode === "label" || p.mode === "empty") { w[b.id] = { untimed: true, s: 0, e: 0, ve: 0 }; continue; }
     const s = dm(p.a!); let e: number | null = null;
     if (p.mode === "range") { e = dm(p.b!); if (e <= s) e += 1440; }
-    pre[b.id] = { s, e }; starts.push(s);
+    raw[b.id] = { s, e };
   }
-  for (const id in pre) {
-    const { s, e } = pre[id];
-    if (e != null) { w[id] = { untimed: false, s, e, ve: e }; continue; }
-    const nx = starts.filter((v) => v > s), n = nx.length ? Math.min(...nx) : null;
-    w[id] = { untimed: false, s, e: n != null ? Math.max(s + 30, n) : s + 60, ve: n != null ? Math.max(s + 15, n) : s + 60 };
+  const timed = list.filter((b) => raw[b.id]), nest = new Set(timed.filter((b) => b.nested).map((b) => b.id));
+  const span = (x: { s: number; e: number | null }, starts: number[]) => {
+    if (x.e != null) return { e: x.e, ve: x.e };
+    const nx = starts.filter((v) => v > x.s), n = nx.length ? Math.min(...nx) : null;
+    return n != null ? { e: Math.max(x.s + 30, n), ve: Math.max(x.s + 15, n) } : { e: x.s + 60, ve: x.s + 60 };
+  };
+  // Nested steps (b.nested) don't cut their host's window and belong to the step that
+  // covers their start (w[id].in); one nobody covers is a normal step. Same as index.html.
+  let sp: Record<string, { e: number; ve: number }>, host: Record<string, string>;
+  for (;;) {
+    const starts = timed.filter((b) => !nest.has(b.id)).map((b) => raw[b.id].s);
+    sp = {}; for (const b of timed) sp[b.id] = span(raw[b.id], starts);
+    host = {}; const out: string[] = [];
+    nest.forEach((id) => { const x = raw[id], h = timed.find((o) => !nest.has(o.id) && raw[o.id].s <= x.s && x.s < sp[o.id].ve); if (h) host[id] = h.id; else out.push(id); });
+    if (!out.length) break; out.forEach((id) => nest.delete(id));
+  }
+  for (const b of timed) {
+    const x = raw[b.id], h = host[b.id], v = h && x.e == null ? { e: x.s + 30, ve: x.s + 30 } : sp[b.id];
+    w[b.id] = { untimed: false, s: x.s, e: v.e, ve: v.ve, ...(h ? { in: h } : {}) };
   }
   return w;
 }
@@ -143,27 +157,32 @@ async function savePos(rows: Block[]) {
 function clashesOf(all: Block[], b: Block, dk: string) {
   const list = planDay(all, dk), w = windows(list), me = w[b.id];
   if (!me || me.untimed) return [] as Block[];
-  return list.filter((x) => { if (x.id === b.id) return false; const v = w[x.id]; return !v.untimed && me.s < v.e && v.s < me.e; });
+  return list.filter((x) => { if (x.id === b.id) return false; const v = w[x.id]; return !v.untimed && !v.in && me.s < v.e && v.s < me.e; });
 }
 function describe(b: Block) {
   return {
     id: b.id, title: b.n, time: b.t || null, tag: b.tag, notes: b.h || null,
     checklist: b.list?.length ? b.list.map((x) => x[0] + (x[1] ? ` (${x[1]})` : "")) : null,
     repeats: b.date ? "μία φορά" : "κάθε " + DAYS[b.weekday], date: b.date,
-    deadline: b.deadline ? isoToAthens(b.deadline) : null, remind_min: b.remind_min,
+    deadline: b.deadline ? isoToAthens(b.deadline) : null, remind_min: b.remind_min, nested: !!b.nested,
   };
 }
 async function dayView(uid: string, dk: string, all?: Block[]) {
   all = all ?? await loadBlocks(uid);
-  const list = planDay(all, dk);
+  const full = planDay(all, dk), w = windows(full), list = full.filter((b) => !w[b.id].in);
   const { data: evs } = await sb.from("tora_events").select("*").eq("user_id", uid).eq("date", dk);
   const ev = (evs ?? []) as Ev[];
+  const stOf = (b: Block) => ev.find((e) => e.block_id === b.id) ?? null;
   const st = list.map((b, i) => ev.find((e) => e.block_id === b.id) ?? ev.find((e) => !e.block_id && e.pos === i) ?? null);
   const cur = st.findIndex((e) => !e || e.status === "p");
   const S: Record<string, string> = { d: "έγινε", s: "παραλείφθηκε", p: "σε εξέλιξη" };
   return {
     date: dk, weekday: DAYS[wdOf(dk)], is_today: dk === todayKey(),
-    steps: list.map((b, i) => ({ ...describe(b), status: st[i] ? S[st[i]!.status] : "εκκρεμεί", started_at: st[i]?.started_at ? isoToAthens(st[i]!.started_at!) : null, current: i === cur && dk === todayKey() })),
+    steps: list.map((b, i) => ({
+      ...describe(b), status: st[i] ? S[st[i]!.status] : "εκκρεμεί", started_at: st[i]?.started_at ? isoToAthens(st[i]!.started_at!) : null, current: i === cur && dk === todayKey(),
+      // steps that happen inside this one: own ✓/skip, never the host's start
+      inside: full.filter((x) => w[x.id].in === b.id).map((x) => ({ ...describe(x), status: stOf(x) ? S[stOf(x)!.status] : "εκκρεμεί" })),
+    })),
   };
 }
 
@@ -195,6 +214,7 @@ const TOOLS = [
         notes: { type: "string", description: "Τι κάνει ακριβώς (προαιρετικό)" },
         deadline: { type: "string", description: "Προθεσμία, ώρα Ελλάδας: YYYY-MM-DDTHH:MM" },
         remind_min: { type: "array", items: { type: "integer", enum: [60, 30, 15] }, description: "Υπενθυμίσεις πριν την προθεσμία (push)" },
+        nested: { type: "boolean", description: "true = γίνεται ΜΕΣΑ σε άλλο βήμα που καλύπτει την ώρα του (π.χ. φαγητό στη δουλειά): δεν μπαίνει στη σειρά και δεν διακόπτει το άλλο." },
       },
     },
   },
@@ -209,6 +229,7 @@ const TOOLS = [
         weekday: { type: ["integer", "string"], description: "Για εβδομαδιαίο βήμα: νέα μέρα" },
         deadline: { type: ["string", "null"], description: "YYYY-MM-DDTHH:MM ή null για αφαίρεση" },
         remind_min: { type: "array", items: { type: "integer", enum: [60, 30, 15] } },
+        nested: { type: "boolean", description: "true/false: αν γίνεται μέσα σε άλλο βήμα που καλύπτει την ώρα του" },
       },
     },
   },
@@ -246,7 +267,7 @@ async function callTool(name: string, a: Record<string, any>, uid: string): Prom
       : [{ date: dateArg(a.date), wd: wdOf(dateArg(a.date)) }];
     const all = await loadBlocks(uid), made = [];
     for (const tg of targets) {
-      const b: Block = { id: crypto.randomUUID(), user_id: uid, weekday: tg.wd, pos: 0, t, n: title, h: String(a.notes ?? ""), list: null, tag, date: tg.date, deadline: dl, remind_min: rem?.length ? rem : null, replaces: null };
+      const b: Block = { id: crypto.randomUUID(), user_id: uid, weekday: tg.wd, pos: 0, t, n: title, h: String(a.notes ?? ""), list: null, tag, date: tg.date, deadline: dl, remind_min: rem?.length ? rem : null, replaces: null, nested: a.nested === true };
       all.push(b); const moved = placeByTime(all, b);
       const { error } = await sb.from("tora_blocks").insert(b); if (error) throw new Error(error.message);
       await savePos(moved.filter((x) => x !== b));
@@ -262,6 +283,7 @@ async function callTool(name: string, a: Record<string, any>, uid: string): Prom
     if (a.time != null) { patch.t = normT(a.time); replace = true; }
     if (a.tag != null && TAGS.includes(a.tag)) patch.tag = a.tag;
     if (a.notes != null) patch.h = String(a.notes);
+    if (a.nested != null) { patch.nested = a.nested === true; replace = true; }
     if (a.date != null) { if (!b.date) throw new Error("Είναι εβδομαδιαίο βήμα· άλλαξε weekday, όχι date."); patch.date = dateArg(a.date); patch.weekday = wdOf(patch.date); patch.replaces = null; replace = true; }
     if (a.weekday != null) { if (b.date) throw new Error("Είναι βήμα μίας φοράς· άλλαξε date."); patch.weekday = weekdayArg(a.weekday); replace = true; }
     if (a.deadline !== undefined) patch.deadline = a.deadline ? athensToISO(a.deadline) : null;
@@ -280,7 +302,9 @@ async function callTool(name: string, a: Record<string, any>, uid: string): Prom
     return { deleted: data[0].n };
   }
   if (name === "tora_mark") {
-    const dk = dateArg(a.date), all = await loadBlocks(uid), list = planDay(all, dk);
+    const dk = dateArg(a.date), all = await loadBlocks(uid), full = planDay(all, dk), w = windows(full);
+    // a nested step is marked by its id; it is not part of the main sequence
+    const list = full.filter((b) => !w[b.id].in || b.id === a.id);
     const { data: evs } = await sb.from("tora_events").select("*").eq("user_id", uid).eq("date", dk);
     const ev = (evs ?? []) as Ev[];
     const st = list.map((b, i) => ev.find((e) => e.block_id === b.id) ?? ev.find((e) => !e.block_id && e.pos === i) ?? null);
