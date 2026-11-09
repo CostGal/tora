@@ -9,6 +9,7 @@ The app is still just `index.html`; this folder is the record of what lives serv
 | `functions/tora-reminders/index.ts` | Edge function, `verify_jwt = false`; authenticates the cron with `x-cron-secret`. |
 | Vault | `tora_cron_secret` (Tora's own). VAPID keys are Ledger's `ledger_vapid_public` / `ledger_vapid_private`, read only; `VAPID_PUBLIC` in `index.html` must match. |
 | pg_cron `tora-reminders` | Every 5 minutes, `net.http_post` to the function. |
+| `migrations/tora_nested_steps.sql` | `tora_blocks.nested`: a step that happens inside another one (e.g. food during work). |
 | `migrations/tora_tokens.sql` | `tora_tokens`: one secret per user per kind (`ics`, `mcp`), RLS on `user_id`. |
 | `functions/tora-api/index.ts` | Edge function, `verify_jwt = false`; the token in the path is the credential. `GET /tora-api/ics/<token>.ics` = calendar feed, `POST /tora-api/mcp/<token>` = MCP server for Claude. |
 

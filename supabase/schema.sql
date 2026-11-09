@@ -18,6 +18,8 @@ create table public.tora_blocks (
   remind_min int[] check (remind_min is null or remind_min <@ array[60,30,15]),
   -- one-off that stands in for this template row on its date
   replaces uuid references public.tora_blocks(id) on delete set null,
+  -- happens inside another step that covers its start (migration `tora_nested_steps`); host is derived, not stored
+  nested boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
