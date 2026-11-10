@@ -20,7 +20,7 @@ The tab bar is icons only. On mobile it reads `[Τώρα] [+] [Πρόγραμμ�
   ✓ keeps `started_at`, and undo goes back to in progress. `prefers-reduced-motion` turns off the orbit and the pulse; the timer stays. The day rolls over at 04:00.
 - **Πρόγραμμα**:
   - **Desktop** is a week on a time axis (hours × Δευ…Κυρ), with week navigation. Drag a block to move it (15' snap; Alt/Ctrl/⌘ copies). Drag its bottom edge to resize, which writes a range. Click empty time to create a step there. Click a block to edit it in the side panel (`#side`). Word times ("πρωί") sit in an untimed strip on top.
-  - **Mobile** is a read/light-edit list of the next 7 days. Tap a step to get the bottom sheet; ⋯ copies a day. There is no drag & drop on mobile.
+  - **Mobile** is a read/light-edit list of the next 7 days. Tap a step to get the bottom sheet; ⋯ copies a day. Long-press a step (~0.4s) and drag it to another slot of the same day: the slot sets the new time (starts where the previous step ends, a range keeps its length). A weekly step asks «Μόνο αυτή τη μέρα / Κάθε <μέρα>» (the first writes a one-off with `replaces`). Same for a same-day drop on the desktop grid. `moveStep`/`doMove` do the work; steps nested in the moved one travel with it.
 - **+**:
   - **Mobile** opens a full-screen flow, one question per screen: Τι; → Πότε; (once: Σήμερα/Αύριο/date, or weekly weekdays) → Τι ώρα; → Προθεσμία; → Πού να μπει;. The last screen shows **only** when the new step's window overlaps an existing block, using the same `windows()` as the grid. It offers before / after / replace / both. Undo comes from the snackbar.
   - **Desktop** opens the side panel instead.
@@ -51,7 +51,7 @@ Demo mode runs when you open the page via `file://` or with `?demo`. It needs no
 
 A row with `nested=true` happens *inside* another step (e.g. «Φαγητό» during «Δουλειά»). The host is never stored: it is the non-nested step whose window covers the nested step's start (`windows()` sets `w[id].in`). If none covers it, the step is a normal one. Nested steps are not part of the Τώρα sequence: `dayState()` leaves them out of `list` and returns them in `inn[hostId]`; they have their own ✓ / skip event (`block_id`, pos ≥ 100) and never touch the host's start or timer. They don't cut the host's window, and `clashes()` ignores them. UI: switch in the step editor, «Μέσα σε …» option on the add flow's clash screen, drawn on top of the host's lane in the desktop grid and as an indented `↳` chip on mobile.
 
-Each row may also have a `deadline` (timestamptz) and `remind_min` (a subset of {60,30,15}).
+Each row may also have a `deadline` (timestamptz) and `remind_min` (a subset of {60,30,15,5}). With a deadline the reminders count back from it; without one (a weekly step like «Φεύγεις για δουλειά» 08:50) they count back from the step's start, every day it appears.
 
 Helper functions:
 - `dayBlocks(wd)` returns the template.
@@ -64,7 +64,7 @@ Helper functions:
 
 ## Deadline reminders
 
-A step can have a `deadline` and `remind_min` (any of 60/30/15). Every 5 minutes pg_cron calls the `tora-reminders` edge function, which claims due offsets in one statement (`tora_claim_reminders()`, logged in `tora_reminder_log`). It pushes «X» σε 1 ώρα / 30' / 15' to every device in `tora_push_subscriptions`, only the closest due offset per block. The pattern is copied from Ledger, but the objects are Tora's own. Ledger's tables, function and cron job are never touched. VAPID keys are Ledger's, read from Vault. Details are in `supabase/README.md`.
+A step can have `remind_min` (any of 60/30/15/5), counted from its `deadline`, or from its start time when it has none (weekly steps; migration `tora_reminders_start`). Every 5 minutes pg_cron calls the `tora-reminders` edge function, which claims due offsets in one statement (`tora_claim_reminders()`, logged in `tora_reminder_log`). It pushes «X» σε 1 ώρα / 30' / 15' to every device in `tora_push_subscriptions`, only the closest due offset per block. The pattern is copied from Ledger, but the objects are Tora's own. Ledger's tables, function and cron job are never touched. VAPID keys are Ledger's, read from Vault. Details are in `supabase/README.md`.
 
 - `sw.js` is notification-only (scope `/tora/`, no fetch handler).
 - The "Ενεργοποίηση ειδοποιήσεων" card shows once, the first time a deadline with a reminder is saved. There is no settings screen.

@@ -15,7 +15,8 @@ create table public.tora_blocks (
   -- its pos is then an anchor: the index among that day's template rows it sits before.
   date date,
   deadline timestamptz,
-  remind_min int[] check (remind_min is null or remind_min <@ array[60,30,15]),
+  -- minutes before the deadline, or (no deadline) before the step's start; migration `tora_reminders_start` added 5
+  remind_min int[] check (remind_min is null or remind_min <@ array[60,30,15,5]),
   -- one-off that stands in for this template row on its date
   replaces uuid references public.tora_blocks(id) on delete set null,
   -- happens inside another step that covers its start (migration `tora_nested_steps`); host is derived, not stored
@@ -76,6 +77,8 @@ alter table public.tora_reminder_log enable row level security;
 create policy tora_push_subscriptions_own on public.tora_push_subscriptions for all to authenticated using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 create policy tora_reminder_log_read_own on public.tora_reminder_log for select to authenticated using ((select auth.uid()) = user_id);
 -- plus tora_claim_reminders() / tora_reminder_secrets(): service role only.
+-- tora_claim_reminders() was rewritten by migration `tora_reminders_start` (migrations/tora_reminders_start.sql):
+-- it also claims start-based reminders (weekly steps, one-offs without a deadline), once per occurrence.
 
 -- Secret links for tora-api (migration `tora_tokens`)
 create table public.tora_tokens (
