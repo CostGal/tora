@@ -352,6 +352,10 @@ body.siding #root.wide{padding-right:420px}
 .nowl::before{content:"";position:absolute;left:-3px;top:-3px;width:8px;height:8px;border-radius:50%;background:var(--acc)}
 body.gdrag,body.gdrag *{cursor:grabbing!important;user-select:none}
 .col .ch b small{font-size:13px;font-weight:500;color:var(--mut);margin-left:4px}
+.bk{-webkit-user-select:none;user-select:none}
+.bk.lift{position:relative;z-index:30;transform:translateY(var(--dy,0px)) scale(1.03);transition:none!important;background:rgba(255,255,255,.16);box-shadow:0 0 0 2px var(--acc),0 18px 30px -10px rgba(0,0,0,.8)}
+.dropln{position:absolute;left:0;right:0;height:3px;border-radius:2px;background:var(--acc);box-shadow:0 0 8px var(--acc);pointer-events:none;z-index:29}
+body.mdrag,body.mdrag *{-webkit-user-select:none;user-select:none}
 .bk.once{border-style:dashed;border-color:rgba(255,255,255,.22)}
 .bk.in{margin-left:16px;min-height:44px;background:rgba(255,255,255,.04);border-left:3px solid rgba(255,255,255,.22)}
 .remc{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
@@ -950,7 +954,7 @@ function renderWeek(animate){
   const tdk=key(today()),dates=[0,1,2,3,4,5,6].map(i=>addDays(today(),i)),old=document.getElementById("wk"),keep=!animate&&old?old.scrollLeft:null;
   let h=header("Πρόγραμμα");
   h+='<div class="wk" id="wk">'+dates.map((d,ci)=>{const dk=key(d),wd=d.getDay(),bl=planDay(dk),bw=windows(bl);
-    return '<div class="glass col'+(dk===tdk?" today":"")+(animate?" enter":"")+'" style="animation-delay:'+(ci*40)+'ms"><div class="ch"><b>'+DAYS[wd]+' <small>'+d.getDate()+'/'+(d.getMonth()+1)+'</small></b><button class="ibtn dm tap" data-act="daymenu" data-wd="'+wd+'" aria-label="Επιλογές για '+DAYS[wd]+'">⋯</button></div><div class="dl">'+(bl.length?bl.map(b=>chipHtml(b,bw[b.id].in)).join(""):'<p class="hint">Κενή μέρα.</p>')+'</div></div>'}).join("")+'</div>';
+    return '<div class="glass col'+(dk===tdk?" today":"")+(animate?" enter":"")+'" style="animation-delay:'+(ci*40)+'ms"><div class="ch"><b>'+DAYS[wd]+' <small>'+d.getDate()+'/'+(d.getMonth()+1)+'</small></b><button class="ibtn dm tap" data-act="daymenu" data-wd="'+wd+'" aria-label="Επιλογές για '+DAYS[wd]+'">⋯</button></div><div class="dl" data-dk="'+dk+'">'+(bl.length?bl.map(b=>chipHtml(b,bw[b.id].in)).join(""):'<p class="hint">Κενή μέρα.</p>')+'</div></div>'}).join("")+'</div>';
   if(FEATURES.insights) h+=calendarHtml();
   if(FEATURES.rules) h+='<div class="glass sec open" style="margin-top:14px"><div class="hd tap" data-act="rules"><span>Κανόνες</span><span>✎</span></div><div class="bd">'+S.rules.map(r=>'<div class="rule">'+ruleHtml(r)+"</div>").join("")+"</div></div>";
   h+=footHtml();
@@ -1044,16 +1048,135 @@ window.addEventListener("pointerup",e=>{
   const copy=e.altKey||e.ctrlKey||e.metaKey,og=gk(b);
   if(GD.mode==="rz"){if(GD.t===b.t){render(false);return}const sn=snap([og]);b.t=GD.t;placeByTime(b);saveDays([og]);render(false);flash(b.id);buzz([8,30,8]);snack(b.n+" · "+b.t,()=>restore(sn));return}
   const c=GD.to;if(!c){render(false);return}
-  const dk=c.dataset.dk,wd=+c.dataset.wd,nk=b.date?dk:wd,nt=GD.untimed?b.t:GD.t;
+  const dk=c.dataset.dk,wd=+c.dataset.wd,nk=b.date?dk:wd,nt=GD.untimed?b.t:GD.t,from=GD.cell.dataset.dk;
   if(nk===og&&nt===b.t&&!copy){render(false);return}
-  const sn=snap([og,nk]),tg=copy?cloneBlock(b):b;
-  if(copy)S.blocks.push(tg);
+  if(!copy){
+    /* a weekly step dropped on another time of the same day: this day only, or every week? */
+    if(!b.date&&!GD.untimed&&dk===from){render(false);askScope(b,dk,nt,sc=>doMove(b,from,dk,nt,sc));return}
+    doMove(b,from,dk,nt,"all");ripple(e.clientX,e.clientY,220,1.1);return;
+  }
+  const sn=snap([og,nk]),tg=cloneBlock(b);
+  S.blocks.push(tg);
   tg.t=nt;if(b.date){if(tg.date!==dk)tg.replaces=null;tg.date=dk;tg.weekday=parseKey(dk).getDay()}else tg.weekday=wd;
   placeByTime(tg);saveDays(nk===og?[og]:[og,nk]);render(false);flash(tg.id);buzz([10,40,14]);ripple(e.clientX,e.clientY,220,1.1);
-  snack((copy?"Αντίγραφο ":"Μετακινήθηκε ")+(b.date?"· "+dateLabel(dk):dayIn(wd))+(nt&&!GD.untimed?" "+nt:""),()=>restore(sn));
+  snack("Αντίγραφο "+(b.date?"· "+dateLabel(dk):dayIn(wd))+(nt&&!GD.untimed?" "+nt:""),()=>restore(sn));
 });
 let DR_sup=0;
 document.addEventListener("click",e=>{if(Date.now()-DR_sup<350){e.stopPropagation();e.preventDefault()}},true);
+
+/* ---------- moving a step (desktop drop and mobile long-press drag share this) ----------
+   Same path as the app's other time edits and as tora_update_step: set b.t, placeByTime, saveDays
+   (the MCP tool does the same server-side), then re-check clashes like tora_add_step does.
+   A step nested inside the one being moved travels with it, shifted by the same minutes; otherwise
+   it would stop being covered and turn into a normal step. */
+function kidsOf(b,dk){const l=planDay(dk),w=windows(l);return l.filter(x=>w[x.id].in===b.id)}
+function shiftT(t,d){if(!d||!clockT(t))return t;const st=parseT(t);return (st.approx?"~":"")+hm(dm(st.a)+d)+(st.mode==="range"?"–"+hm(dm(st.b)+d):"")}
+/* scope "all": the weekly row itself moves (every week). scope "day": a one-off that `replaces` the
+   weekly row on that date only (the row is untouched on other weeks). A one-off is just edited.
+   Known gap: a one-off host moved to another DAY leaves weekly nested steps behind. */
+function moveStep(b,from,to,t,scope){
+  const wdT=parseKey(to).getDay(),sn=snap([gk(b),to,wdT]);
+  const kids=kidsOf(b,from),ow=windows(planDay(from))[b.id],d=ow&&!ow.untimed&&clockT(t)?dm(parseT(t).a)-ow.s:0;
+  const put=(x,nt,one)=>{let tg=x;
+    if(one){tg=cloneBlock(x,{date:to,weekday:wdT,replaces:x.id,t:nt});S.blocks.push(tg)}
+    else{x.t=nt;if(x.date){if(x.date!==to)x.replaces=null;x.date=to;x.weekday=wdT}else x.weekday=wdT}
+    placeByTime(tg);return tg};
+  const dayOnly=!b.date&&scope==="day",tg=put(b,t,dayOnly);
+  kids.forEach(k=>put(k,shiftT(k.t,d),k.date?false:(dayOnly||!!b.date)));
+  saveDays(sn.keys);
+  return {sn,tg};
+}
+function clashOf(tg,dk){const l=planDay(dk),w=windows(l),me=w[tg.id];if(!me||me.untimed||me.in)return [];
+  return l.filter(x=>{if(x.id===tg.id)return false;const v=w[x.id];return !v.untimed&&!v.in&&me.s<v.e&&v.s<me.e})}
+function doMove(b,from,to,t,scope){
+  const wasTpl=!b.date,r=moveStep(b,from,to,t,scope),cl=clashOf(r.tg,to);
+  render(false);flash(r.tg.id);buzz([10,40,14]);
+  const where=!wasTpl?(from!==to?" · "+dateLabel(to):""):scope==="day"?" · μόνο "+dateLabel(to).replace(/^Σήμερα$/,"σήμερα").replace(/^Αύριο$/,"αύριο"):" · κάθε "+DAYS[parseKey(to).getDay()];
+  snack("Μετακινήθηκε"+where+(t&&r.tg.t===t?" · "+t:"")+(cl.length?" · ⚠ πέφτει πάνω σε «"+cl.map(x=>x.n).join("», «")+"»":""),()=>restore(r.sn),cl.length?9000:0);
+}
+/* Weekly step moved within its day: say what it changes and let the user pick. */
+function askScope(b,dk,t,go){
+  const d=parseKey(dk),wd=d.getDay(),lab=dateLabel(dk).replace(/^Σήμερα$/,"σήμερα").replace(/^Αύριο$/,"αύριο");
+  openSheet('<div class="sheet glass"><div class="grab"></div><div class="edtop"><button class="txtbtn tap" data-e="close">Άκυρο</button><div class="ttl">Μετακίνηση</div><span></span></div><div class="edbody">'+
+    '<p class="hint"><b>«'+esc(b.n)+'»</b> → '+esc(t)+'<br>Είναι εβδομαδιαίο βήμα. Η αλλαγή να ισχύει…</p>'+
+    '<div class="acts" style="flex-direction:column"><button class="rowbtn tap" data-sc="day">Μόνο '+esc(lab)+'<small style="display:block;opacity:.6;font-size:12px">οι άλλες εβδομάδες μένουν ίδιες</small></button>'+
+    '<button class="rowbtn tap" data-sc="all">Κάθε '+DAYS[wd]+'<small style="display:block;opacity:.6;font-size:12px">όλες οι εβδομάδες</small></button></div></div></div>');
+  HOST.onclick=e=>{if(e.target===ed){closeEd();return}
+    const x=e.target.closest("[data-sc]");if(x){closeEd();go(x.dataset.sc);return}
+    if(e.target.closest("[data-e=close]"))closeEd()};
+}
+
+/* ---------- Πρόγραμμα on mobile: long-press a step, drag it to another slot of the same day ----------
+   Pointer events, no library (the app is one file with no build). A short move before the press
+   completes means "scroll": we cancel and the browser pans as usual (.bk keeps touch-action:manipulation).
+   Once lifted, the finger is held still, so scrolling hasn't started and a non-passive touchmove
+   preventDefault keeps the page and the day strip from panning. The drop slot decides the new time:
+   it starts where the previous step ends (before the next one), and a range keeps its length. */
+const MD={};
+function mdSlots(){return [...MD.dl.querySelectorAll(".bk:not(.in)")].filter(n=>n!==MD.el)}
+function mdPlace(){
+  const dy=(MD.y+scrollY)-MD.py0,grp=[MD.el,...MD.kids];
+  grp.forEach(n=>n.style.setProperty("--dy",dy+"px"));
+  const ch=mdSlots();let i=0;ch.forEach(n=>{const r=n.getBoundingClientRect();if(MD.y>r.top+r.height/2)i++});
+  MD.i=i;
+  const rest=[...MD.dl.children].filter(n=>n!==MD.line&&n!==MD.el&&!MD.kids.includes(n)),last=rest[rest.length-1];
+  MD.line.style.top=((i<ch.length?ch[i].offsetTop-4:(last?last.offsetTop+last.offsetHeight+1:0)))+"px";
+}
+function mdLift(){
+  if(!MD.on)return;const b=S.blocks.find(x=>x.id===MD.id);if(!b){mdEnd(false);return}
+  /* nested chips are found by id: in the list they aren't always right under their host */
+  MD.lift=true;MD.kids=kidsOf(b,MD.dk).map(k=>MD.dl.querySelector('[data-bid="'+k.id+'"]')).filter(Boolean);
+  [MD.el,...MD.kids].forEach(n=>n.classList.add("lift"));document.body.classList.add("mdrag");
+  MD.line=document.createElement("div");MD.line.className="dropln";MD.dl.appendChild(MD.line);
+  MD.i0=[...MD.dl.querySelectorAll(".bk:not(.in)")].indexOf(MD.el);
+  try{MD.el.setPointerCapture(MD.pid)}catch(_){}
+  buzz(14);mdPlace();mdAuto();
+}
+/* edge auto-scroll while dragging near the top/bottom of the screen */
+function mdAuto(){if(!MD.lift)return;const y=MD.y;if(y<90||y>innerHeight-90){scrollBy(0,y<90?-12:12);mdPlace()}requestAnimationFrame(mdAuto)}
+function mdEnd(commit){
+  clearTimeout(MD.tm);const was=MD.lift;MD.on=false;MD.lift=false;
+  if(was){[MD.el,...MD.kids].forEach(n=>{n.classList.remove("lift");n.style.removeProperty("--dy")});MD.line&&MD.line.remove();document.body.classList.remove("mdrag");DR_sup=Date.now()}
+  if(was&&commit)mdDrop();
+}
+/* New start for b if it is dropped before top[i]. null = no timed neighbour to anchor to. */
+function dropTime(b,top,W,i){
+  const ok=x=>!W[x.id].untimed;let p=null,n=null;
+  for(let k=i-1;k>=0;k--)if(ok(top[k])){p=top[k];break}
+  for(let k=i;k<top.length;k++)if(ok(top[k])){n=top[k];break}
+  const st=parseT(b.t),rng=clockT(b.t)&&st.mode==="range";let dur=0;
+  if(rng){dur=dm(st.b)-dm(st.a);if(dur<=0)dur+=1440}
+  const f5=m=>Math.floor(m/5)*5,c5=m=>Math.ceil(m/5)*5,end=v=>v.range?v.e:v.s+30;let s;
+  if(p&&n){const pv=W[p.id],nv=W[n.id];s=c5(end(pv));if(s>=nv.s)s=Math.max(pv.s,f5((pv.s+nv.s)/2))}
+  else if(p)s=c5(end(W[p.id]));
+  else if(n)s=Math.max(240,f5(W[n.id].s-(rng?dur:30)));
+  else return null;
+  return tWith(b,s,rng?s+dur:null);
+}
+function mdDrop(){
+  const b=S.blocks.find(x=>x.id===MD.id),dk=MD.dk;if(!b||MD.i===MD.i0)return;
+  const L=planDay(dk),W=windows(L),kids=L.filter(x=>W[x.id].in===b.id);
+  const rest=L.filter(x=>x!==b&&!kids.includes(x)),W2=windows(rest),top=rest.filter(x=>!W2[x.id].in);
+  const t=dropTime(b,top,W2,MD.i);
+  if(!t){snack("Δεν βρήκα ώρα για αυτή τη θέση. Βάλε ώρα σε ένα γειτονικό βήμα.");return}
+  if(t===b.t)return;
+  if(b.date)doMove(b,dk,dk,t,"day");else askScope(b,dk,t,sc=>doMove(b,dk,dk,t,sc));
+}
+root.addEventListener("pointerdown",e=>{
+  if(isDesk()||S.view!=="week"||(e.pointerType==="mouse"&&e.button!==0))return;
+  const el=e.target.closest(".bk:not(.in)"),dl=el&&el.closest(".dl");if(!el||!dl||!dl.dataset.dk)return;
+  clearTimeout(MD.tm);
+  Object.assign(MD,{on:true,lift:false,pid:e.pointerId,el,dl,dk:dl.dataset.dk,id:el.dataset.bid,x0:e.clientX,y0:e.clientY,y:e.clientY,py0:e.clientY+scrollY,tm:setTimeout(mdLift,380)});
+});
+window.addEventListener("pointermove",e=>{
+  if(!MD.on||e.pointerId!==MD.pid)return;MD.y=e.clientY;
+  if(!MD.lift){if(Math.hypot(e.clientX-MD.x0,e.clientY-MD.y0)>7)mdEnd(false);return}
+  mdPlace();
+});
+window.addEventListener("pointerup",e=>{if(MD.on&&e.pointerId===MD.pid)mdEnd(true)});
+window.addEventListener("pointercancel",e=>{if(MD.on&&e.pointerId===MD.pid)mdEnd(false)});
+document.addEventListener("touchmove",e=>{if(MD.lift&&e.cancelable)e.preventDefault()},{passive:false});
+root.addEventListener("contextmenu",e=>{if(MD.on&&e.target.closest(".bk"))e.preventDefault()});
 matchMedia("(min-width:1024px)").addEventListener("change",()=>{closeEd();render(false)});
 /* Sibling apps + sign out: the only account controls, at the foot of Πρόγραμμα. */
 function footHtml(){let h='<div class="sibs"><a class="tap" href="#" id="lnk">Ημερολόγιο & Claude</a></div>';
@@ -1176,7 +1299,7 @@ function guessTag(n){
 /* ---------- snackbar with Αναίρεση ---------- */
 const snackEl=document.createElement("div");snackEl.className="snack glass";document.body.appendChild(snackEl);
 let snT=null,snUndo=null;
-function snack(msg,undo){snUndo=undo||null;snackEl.innerHTML='<span>'+esc(msg)+'</span>'+(undo?'<button class="tap" data-u>Αναίρεση</button>':'');snackEl.classList.toggle("top",ed.classList.contains("open")&&!isDesk());snackEl.classList.add("on");clearTimeout(snT);snT=setTimeout(hideSnack,undo?6000:1800)}
+function snack(msg,undo,ms){snUndo=undo||null;snackEl.innerHTML='<span>'+esc(msg)+'</span>'+(undo?'<button class="tap" data-u>Αναίρεση</button>':'');snackEl.classList.toggle("top",ed.classList.contains("open")&&!isDesk());snackEl.classList.add("on");clearTimeout(snT);snT=setTimeout(hideSnack,ms||(undo?6000:1800))}
 function hideSnack(){snackEl.classList.remove("on");snUndo=null}
 snackEl.addEventListener("click",e=>{if(!e.target.closest("[data-u]")||!snUndo)return;const u=snUndo;hideSnack();u();setTimeout(()=>snack("Αναιρέθηκε"),60)});
 
@@ -1280,7 +1403,9 @@ function timePicker(host,initial,onChange){
 function daySel(cur,attr,dis){return '<div class="daysel">'+ORDER.map(x=>'<button class="tap'+(x===cur?" on":"")+'" data-'+attr+'="'+x+'"'+(dis===x?" disabled":"")+'>'+SHORT[x]+'</button>').join("")+'</div>'}
 function nextDateFor(wd){const t=today();return addDays(t,(wd-t.getDay()+7)%7)}
 function toLocalInput(iso){if(!iso)return"";const d=new Date(iso),z=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate())+"T"+z(d.getHours())+":"+z(d.getMinutes())}
-const REM=[[60,"1 ώρα πριν"],[30,"30' πριν"],[15,"15' πριν"]];
+const REM=[[60,"1 ώρα πριν"],[30,"30' πριν"],[15,"15' πριν"],[5,"5' πριν"]];
+/* A reminder counts from the deadline, or (no deadline) from the step's start: that needs a clock time. */
+function clockT(t){const s=parseT(t);return !s.empty&&s.mode!=="label"}
 function dateLabel(dk){const d=parseKey(dk),diff=Math.round((d-today())/864e5);return diff===0?"Σήμερα":diff===1?"Αύριο":DAYS[d.getDay()]+" "+d.getDate()+"/"+(d.getMonth()+1)}
 /* The step editor. id = edit; else pre = {weekday, date, t} for a new step. */
 function openBlock(id,pre,focus){
@@ -1288,8 +1413,8 @@ function openBlock(id,pre,focus){
   const ex=id?S.blocks.find(x=>x.id===id):null; if(id&&!ex) return;
   const b=ex||{id:null,weekday:pre.date?parseKey(pre.date).getDay():(pre.weekday!=null?+pre.weekday:today().getDay()),date:pre.date||null,t:pre.t||"",n:"",h:"",tag:"other",list:null,deadline:null,remind_min:null,replaces:null,nested:false};
   let nest=!!b.nested,tag=b.tag||"other",tagTouched=!!id,once=!!b.date,nd=+b.weekday,ndate=b.date||pre.ndate||key(nextDateFor(b.weekday)),rem=(b.remind_min||[]).slice();
-  const ln=(b.list||[]).length,more=b.h||ln||b.deadline;
-  const sum=more?esc([b.h?b.h.slice(0,46)+(b.h.length>46?"…":""):"",ln?ln+" στη λίστα":"",b.deadline?"προθεσμία "+fmtDL(b.deadline):""].filter(Boolean).join(" · ")):"Περιγραφή, λίστα, προθεσμία";
+  const ln=(b.list||[]).length,more=b.h||ln||b.deadline||(b.remind_min&&b.remind_min.length);
+  const sum=more?esc([b.h?b.h.slice(0,46)+(b.h.length>46?"…":""):"",ln?ln+" στη λίστα":"",b.deadline?"προθεσμία "+fmtDL(b.deadline):"",b.remind_min&&b.remind_min.length?"🔔 "+b.remind_min.slice().sort((x,y)=>y-x).map(x=>x+"'").join(", ")+(b.deadline?"":" πριν την έναρξη"):""].filter(Boolean).join(" · ")):"Περιγραφή, λίστα, προθεσμία, υπενθύμιση";
   openSheet('<div class="sheet glass"><div class="grab"></div><div class="edtop"><button class="txtbtn tap" data-e="close">Άκυρο</button><div class="ttl">'+(id?"Βήμα":"Νέο βήμα")+'</div><button class="txtbtn strong tap" data-e="save">Τέλος</button></div><div class="edbody">'+
    '<div class="r2"><input id="fn" class="big" value="'+esc(b.n)+'" placeholder="Τίτλος" enterkeyhint="done" autocomplete="off" autocapitalize="sentences">'+tbtnHtml(b.t,"ftb")+'</div><div id="tpw" hidden></div>'+
    '<div class="tagsel" id="tg">'+Object.keys(TAGS).map(k=>'<button class="tap'+(k===tag?" on":"")+'" data-tag="'+k+'"><i style="background:'+TAGS[k][1]+'"></i>'+TAGS[k][0]+'</button>').join("")+'</div>'+
@@ -1297,17 +1422,19 @@ function openBlock(id,pre,focus){
    '<button type="button" class="nestb tap'+(nest?" on":"")+'" data-e="nest"><span><b>Γίνεται μέσα σε άλλο βήμα</b><small>π.χ. φαγητό στη δουλειά. Δεν διακόπτει το «Ξεκίνα» του άλλου.</small></span><i class="sw"></i></button>'+
    '<button class="more tap'+(more?" has":"")+'" data-e="more"><span><b>Λεπτομέρειες</b><small>'+sum+'</small></span><span class="ch">⌄</span></button>'+
    '<div class="morebd"><div class="lbl">Τι κάνεις ακριβώς</div><textarea id="fh">'+esc(b.h)+'</textarea><div class="lbl">Λίστα · μία ανά γραμμή, «Άσκηση | 3×10»</div><textarea id="fl">'+esc(listToText(b.list))+'</textarea>'+
-   '<div class="lbl">Προθεσμία</div><input type="datetime-local" id="fdl" value="'+toLocalInput(b.deadline)+'"><div class="remc" id="frem"></div></div>'+
+   '<div class="lbl">Προθεσμία</div><input type="datetime-local" id="fdl" value="'+toLocalInput(b.deadline)+'"><div class="lbl" id="fremlbl"></div><div class="remc" id="frem"></div></div>'+
    (id?'<div class="acts"><button class="rowbtn tap" data-e="dup">⧉ Διπλότυπο</button><button class="rowbtn del tap" data-e="del">Διαγραφή</button></div>':'')+
    '</div></div>');
   const q=s=>HOST.querySelector(s);
   const fn=q("#fn"),ftb=q("#ftb"),tpw=q("#tpw");let tval=b.t||"",tp=null;
   const drawWhen=()=>{q("#fwhen").innerHTML=once?'<input type="date" id="fdate" value="'+ndate+'">':daySel(nd,"day")};
-  const drawRem=()=>{const has=!!q("#fdl").value;q("#frem").innerHTML=has?REM.map(r=>'<button type="button" class="chipb tap'+(rem.indexOf(r[0])>=0?" on":"")+'" data-rem="'+r[0]+'">'+r[1]+'</button>').join("")+'<button type="button" class="chipb tap'+(rem.length?"":" on")+'" data-rem="0">Καμία</button>':""};
+  const drawRem=()=>{const dl=!!q("#fdl").value,has=dl||clockT(tval);
+    q("#fremlbl").textContent=!has?"Υπενθύμιση: βάλε ώρα (ή προθεσμία) για να ειδοποιείσαι":dl?"Υπενθύμιση πριν την προθεσμία":once?"Υπενθύμιση πριν την έναρξη":"Υπενθύμιση πριν την έναρξη, κάθε φορά που εμφανίζεται";
+    q("#frem").innerHTML=has?REM.map(r=>'<button type="button" class="chipb tap'+(rem.indexOf(r[0])>=0?" on":"")+'" data-rem="'+r[0]+'">'+r[1]+'</button>').join("")+'<button type="button" class="chipb tap'+(rem.length?"":" on")+'" data-rem="0">Καμία</button>':""};
   drawWhen();drawRem();
   q("#fdl").addEventListener("input",drawRem);
   ftb.addEventListener("click",()=>{const open=tpw.hidden;tpw.hidden=!open;ftb.classList.toggle("open",open);
-    if(open&&!tp){tpw.className="tp";tp=timePicker(tpw,tval,v=>{tval=v;setTbtn(ftb,v)})}if(open){fn.blur();tpw.scrollIntoView({block:"nearest",behavior:"smooth"})}});
+    if(open&&!tp){tpw.className="tp";tp=timePicker(tpw,tval,v=>{tval=v;setTbtn(ftb,v);drawRem()})}if(open){fn.blur();tpw.scrollIntoView({block:"nearest",behavior:"smooth"})}});
   if(focus) fn.focus();
   HOST.querySelectorAll(".morebd textarea").forEach(x=>x.addEventListener("input",()=>grow(x)));
   if(!id) fn.addEventListener("input",()=>{if(tagTouched)return;tag=guessTag(fn.value);HOST.querySelectorAll("[data-tag]").forEach(x=>x.classList.toggle("on",x.dataset.tag===tag))});
@@ -1319,8 +1446,8 @@ function openBlock(id,pre,focus){
     const sn=snap(og!=null?[og,ng]:[ng]);
     Object.assign(b,{n:fn.value.trim()||"Βήμα",t:tval,h:q("#fh").value.trim(),tag:tag,list:textToList(q("#fl").value),nested:nest});
     if(!b.list.length) b.list=null;
-    const hadRem=!!(b.deadline&&b.remind_min&&b.remind_min.length);
-    b.deadline=dlv?new Date(dlv).toISOString():null; b.remind_min=b.deadline&&rem.length?rem.slice().sort((x,y)=>y-x):null;
+    const hadRem=!!(b.remind_min&&b.remind_min.length);
+    b.deadline=dlv?new Date(dlv).toISOString():null; b.remind_min=(b.deadline||clockT(tval))&&rem.length?rem.slice().sort((x,y)=>y-x):null;
     if(once){b.date=ndate;b.weekday=parseKey(ndate).getDay()}else{b.date=null;b.weekday=nd;b.replaces=null}
     if(!id){b.id=uuid();b.user_id=uid();S.blocks.push(b);placeByTime(b)}
     else if(ng!==og||tval!==oldT) placeByTime(b);
@@ -1334,7 +1461,7 @@ function openBlock(id,pre,focus){
     if(e.target===ed){closeEd();return}
     const tb=e.target.closest("[data-tag]");if(tb){tag=tb.dataset.tag;tagTouched=true;HOST.querySelectorAll("[data-tag]").forEach(x=>x.classList.toggle("on",x===tb));return}
     const db=e.target.closest("[data-day]");if(db){nd=+db.dataset.day;HOST.querySelectorAll("[data-day]").forEach(x=>x.classList.toggle("on",x===db));return}
-    const qb=e.target.closest("[data-q]");if(qb){once=qb.dataset.q==="o";HOST.querySelectorAll("[data-q]").forEach(x=>x.classList.toggle("on",x===qb));drawWhen();return}
+    const qb=e.target.closest("[data-q]");if(qb){once=qb.dataset.q==="o";HOST.querySelectorAll("[data-q]").forEach(x=>x.classList.toggle("on",x===qb));drawWhen();drawRem();return}
     const rb=e.target.closest("[data-rem]");if(rb){const v=+rb.dataset.rem;if(!v)rem=[];else{const i=rem.indexOf(v);if(i>=0)rem.splice(i,1);else rem.push(v)}drawRem();buzz(5);return}
     const t=e.target.closest("[data-e]");if(!t)return;const a=t.dataset.e;
     if(a==="close"){closeEd();return}

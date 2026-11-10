@@ -9,9 +9,12 @@ The app is still just `index.html`; this folder is the record of what lives serv
 | `functions/tora-reminders/index.ts` | Edge function, `verify_jwt = false`; authenticates the cron with `x-cron-secret`. |
 | Vault | `tora_cron_secret` (Tora's own). VAPID keys are Ledger's `ledger_vapid_public` / `ledger_vapid_private`, read only; `VAPID_PUBLIC` in `index.html` must match. |
 | pg_cron `tora-reminders` | Every 5 minutes, `net.http_post` to the function. |
+| `migrations/tora_reminders_start.sql` | `remind_min` may contain 5; `tora_claim_reminders()` also claims start-based reminders for weekly steps (see below). |
 | `migrations/tora_nested_steps.sql` | `tora_blocks.nested`: a step that happens inside another one (e.g. food during work). |
 | `migrations/tora_tokens.sql` | `tora_tokens`: one secret per user per kind (`ics`, `mcp`), RLS on `user_id`. |
 | `functions/tora-api/index.ts` | Edge function, `verify_jwt = false`; the token in the path is the credential. `GET /tora-api/ics/<token>.ics` = calendar feed, `POST /tora-api/mcp/<token>` = MCP server for Claude. |
+
+**Start-based reminders.** A step with `remind_min` and no deadline is reminded relative to its start (`t` = `08:50`, `~08:50` or `08:50–17:30`: the first clock time; words/empty have none). Weekly rows produce one occurrence per plan day (Europe/Athens, day rolls over at 04:00, so 00:00–03:59 happens the next calendar night); a one-off without deadline uses its date. The occurrence's timestamp goes in `tora_reminder_log.deadline`, so the PK means once per occurrence, not once per step. An occurrence is skipped when a one-off `replaces` that row on that date (the one-off has its own reminder) or when the step already has an event that day. Rows with a deadline behave as before. With the 5-minute cron a 5' reminder has exactly one chance: if a cron tick is lost, it is lost.
 
 Ledger's own tables, `send-reminders` function and `ledger-reminders` job are not touched.
 

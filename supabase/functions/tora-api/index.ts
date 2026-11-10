@@ -17,6 +17,7 @@ const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SE
 const TZ = "Europe/Athens";
 const DAYS = ["Κυριακή", "Δευτέρα", "Τρίτη", "Τετάρτη", "Πέμπτη", "Παρασκευή", "Σάββατο"];
 const TAGS = ["work", "rest", "gym", "pr", "home", "partner", "sleep", "food", "other"];
+const REMS = [60, 30, 15, 5];
 const BYDAY = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
 
 type Block = {
@@ -80,6 +81,13 @@ function normT(t: string | undefined) {
   if (p.mode === "empty") return "";
   if (p.mode === "label") { if (p.label!.length > 30) throw new Error("Η ώρα είναι πολύ μεγάλη. Δώσε 18:40, ~18:40, 09:00–17:00 ή μια λέξη (πρωί)."); return p.label!; }
   return (p.approx ? "~" : "") + p.a + (p.mode === "range" ? "–" + p.b : "");
+}
+/** Reminders need a reference: the deadline, or (no deadline) the start of a step that has a clock time. */
+const hasClock = (t: string) => { const m = parseT(t).mode; return m === "time" || m === "range"; };
+function remArg(x: unknown): number[] | null {
+  if (!Array.isArray(x)) return null;
+  const r = [...new Set(x.map(Number).filter((v) => REMS.includes(v)))].sort((a, b) => b - a);
+  return r.length ? r : null;
 }
 const dm = (hm: string) => { const [h, m] = hm.split(":").map(Number); const x = h * 60 + m; return x < 240 ? x + 1440 : x; };
 const WORDM: Record<string, number> = { "πρωί": 480, "μεσημέρι": 780, "απόγευμα": 1020, "βράδυ": 1260 };
@@ -213,7 +221,7 @@ const TOOLS = [
         tag: { type: "string", enum: TAGS },
         notes: { type: "string", description: "Τι κάνει ακριβώς (προαιρετικό)" },
         deadline: { type: "string", description: "Προθεσμία, ώρα Ελλάδας: YYYY-MM-DDTHH:MM" },
-        remind_min: { type: "array", items: { type: "integer", enum: [60, 30, 15] }, description: "Υπενθυμίσεις πριν την προθεσμία (push)" },
+        remind_min: { type: "array", items: { type: "integer", enum: [60, 30, 15, 5] }, description: "Λεπτά πριν (push): 60, 30, 15 ή 5. Με deadline μετράνε πριν την προθεσμία· χωρίς deadline, πριν την ώρα έναρξης του βήματος, κάθε μέρα που εμφανίζεται (π.χ. εβδομαδιαίο βήμα στις 08:50 με [5] → ειδοποίηση 08:45 κάθε μέρα). Θέλει ώρα (18:40 ή 09:00–17:00)." },
         nested: { type: "boolean", description: "true = γίνεται ΜΕΣΑ σε άλλο βήμα που καλύπτει την ώρα του (π.χ. φαγητό στη δουλειά): δεν μπαίνει στη σειρά και δεν διακόπτει το άλλο." },
       },
     },
@@ -228,7 +236,7 @@ const TOOLS = [
         notes: { type: "string" }, date: { type: "string", description: "Για βήμα μίας φοράς: νέα ημερομηνία" },
         weekday: { type: ["integer", "string"], description: "Για εβδομαδιαίο βήμα: νέα μέρα" },
         deadline: { type: ["string", "null"], description: "YYYY-MM-DDTHH:MM ή null για αφαίρεση" },
-        remind_min: { type: "array", items: { type: "integer", enum: [60, 30, 15] } },
+        remind_min: { type: "array", items: { type: "integer", enum: [60, 30, 15, 5] }, description: "Λεπτά πριν την προθεσμία ή (χωρίς deadline) πριν την ώρα έναρξης. [] = καμία." },
         nested: { type: "boolean", description: "true/false: αν γίνεται μέσα σε άλλο βήμα που καλύπτει την ώρα του" },
       },
     },
@@ -260,14 +268,15 @@ async function callTool(name: string, a: Record<string, any>, uid: string): Prom
     const title = String(a.title ?? "").trim(); if (!title) throw new Error("Λείπει ο τίτλος.");
     const t = normT(a.time), tag = TAGS.includes(a.tag) ? a.tag : "other";
     let dl: string | null = a.deadline ? athensToISO(a.deadline) : null;
-    const rem = dl && Array.isArray(a.remind_min) ? [...new Set(a.remind_min.map(Number).filter((x: number) => [60, 30, 15].includes(x)))].sort((x, y) => (y as number) - (x as number)) as number[] : null;
+    const rem = remArg(a.remind_min);
+    if (rem && !dl && !hasClock(t)) throw new Error("Υπενθύμιση θέλει προθεσμία (deadline) ή ώρα έναρξης (π.χ. 08:50). Χωρίς κανένα από τα δύο δεν έχει από πού να μετρήσει.");
     if (a.date && a.weekdays?.length) throw new Error("Δώσε ή date (μία φορά) ή weekdays (κάθε εβδομάδα), όχι και τα δύο.");
     const targets: { date: string | null; wd: number }[] = a.weekdays?.length
       ? [...new Set((a.weekdays as unknown[]).map(weekdayArg))].map((wd) => ({ date: null, wd }))
       : [{ date: dateArg(a.date), wd: wdOf(dateArg(a.date)) }];
     const all = await loadBlocks(uid), made = [];
     for (const tg of targets) {
-      const b: Block = { id: crypto.randomUUID(), user_id: uid, weekday: tg.wd, pos: 0, t, n: title, h: String(a.notes ?? ""), list: null, tag, date: tg.date, deadline: dl, remind_min: rem?.length ? rem : null, replaces: null, nested: a.nested === true };
+      const b: Block = { id: crypto.randomUUID(), user_id: uid, weekday: tg.wd, pos: 0, t, n: title, h: String(a.notes ?? ""), list: null, tag, date: tg.date, deadline: dl, remind_min: rem, replaces: null, nested: a.nested === true };
       all.push(b); const moved = placeByTime(all, b);
       const { error } = await sb.from("tora_blocks").insert(b); if (error) throw new Error(error.message);
       await savePos(moved.filter((x) => x !== b));
@@ -287,8 +296,11 @@ async function callTool(name: string, a: Record<string, any>, uid: string): Prom
     if (a.date != null) { if (!b.date) throw new Error("Είναι εβδομαδιαίο βήμα· άλλαξε weekday, όχι date."); patch.date = dateArg(a.date); patch.weekday = wdOf(patch.date); patch.replaces = null; replace = true; }
     if (a.weekday != null) { if (b.date) throw new Error("Είναι βήμα μίας φοράς· άλλαξε date."); patch.weekday = weekdayArg(a.weekday); replace = true; }
     if (a.deadline !== undefined) patch.deadline = a.deadline ? athensToISO(a.deadline) : null;
-    if (a.remind_min !== undefined) patch.remind_min = Array.isArray(a.remind_min) && a.remind_min.length ? a.remind_min.filter((x: number) => [60, 30, 15].includes(+x)).map(Number) : null;
-    if ((patch.deadline === null || (!b.deadline && !patch.deadline)) && patch.remind_min === undefined) patch.remind_min = null;
+    if (a.remind_min !== undefined) patch.remind_min = remArg(a.remind_min);
+    // Removing the deadline drops its reminders (as before) unless new ones are given. Other edits never touch remind_min.
+    if (a.deadline !== undefined && !a.deadline && patch.remind_min === undefined) patch.remind_min = null;
+    const after = { deadline: patch.deadline !== undefined ? patch.deadline : b.deadline, t: patch.t !== undefined ? patch.t : b.t, rem: patch.remind_min !== undefined ? patch.remind_min : b.remind_min };
+    if (a.remind_min !== undefined && after.rem && !after.deadline && !hasClock(after.t)) throw new Error("Υπενθύμιση θέλει προθεσμία (deadline) ή ώρα έναρξης (π.χ. 08:50).");
     Object.assign(b, patch);
     const moved = replace ? placeByTime(all, b) : [];
     const { error } = await sb.from("tora_blocks").update({ ...patch, pos: b.pos, updated_at: new Date().toISOString() }).eq("id", b.id).eq("user_id", uid);
