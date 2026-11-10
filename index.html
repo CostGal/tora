@@ -390,6 +390,38 @@ body.mdrag,body.mdrag *{-webkit-user-select:none;user-select:none}
 .ends button.on{border-color:var(--acc);background:rgba(217,119,87,.16)}
 .tp .lblchips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .tp-done{width:100%;margin-top:12px}
+/* sounds: header toggle + picker sheet */
+.ibtn.snd{width:38px;height:38px;border-radius:12px;font-size:0;color:var(--mut)}
+.ibtn.snd svg{width:20px;height:20px}
+.ibtn.snd.on{color:var(--acc2);border-color:rgba(217,119,87,.55);background:rgba(217,119,87,.14)}
+.ibtn.snd .eq{display:flex;align-items:flex-end;gap:2px;height:16px}
+.ibtn.snd .eq i{width:3px;border-radius:1.5px;background:currentColor;animation:eq 1.2s ease-in-out infinite}
+.ibtn.snd .eq i:nth-child(1){height:8px}.ibtn.snd .eq i:nth-child(2){height:14px;animation-delay:-.4s}.ibtn.snd .eq i:nth-child(3){height:10px;animation-delay:-.8s}
+@keyframes eq{50%{transform:scaleY(.35)}}
+.ibtn.snd .eq i{transform-origin:bottom}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.sgrid .rowbtn{min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;white-space:normal}
+.sgrid .rowbtn span{font-size:22px;line-height:1}
+.sgrid .rowbtn.on{border-color:var(--acc);background:rgba(217,119,87,.18)}
+.slab{font-size:11px;letter-spacing:.2em;color:var(--mut);text-transform:uppercase;margin:4px 2px 8px}
+.svol{width:100%;accent-color:#D97757;height:32px}
+/* skip confirmation with the sad koi */
+.sadc{text-align:center;padding:4px 6px 0}
+.sadc svg{width:190px;height:auto;display:block;margin:0 auto 6px;overflow:visible}
+.sadc .koi{animation:sadsway 3.6s ease-in-out infinite;transform-origin:50% 50%}
+.sadc .tear{animation:tear 2.4s ease-in infinite}
+@keyframes sadsway{50%{transform:rotate(-4deg) translateY(3px)}}
+@keyframes tear{0%,20%{transform:translateY(0);opacity:0}30%{opacity:1}90%{transform:translateY(26px);opacity:0}100%{opacity:0}}
+.sadc h3{font-size:24px;font-weight:600;margin-bottom:6px}
+.sadc p{color:var(--mut);font-size:15px;line-height:1.45;margin-bottom:4px}
+.sadc .acts{flex-direction:column}
+.sadc .acts .btn{width:100%}
+/* swap now ⇄ next */
+.next .swp{flex:none;width:44px;height:44px;margin-left:4px;border-radius:14px;border:1px solid var(--edge);background:rgba(255,255,255,.08);color:var(--txt);display:grid;place-items:center}
+.next .swp svg{width:20px;height:20px}
+.swapping{animation:swapo .42s cubic-bezier(.5,0,.5,1) both}
+@keyframes swapo{50%{transform:translateY(10px) scale(.97);opacity:.3;filter:blur(4px)}}
+@media (prefers-reduced-motion:reduce){.sadc .koi,.sadc .tear,.ibtn.snd .eq i,.swapping{animation:none}}
 </style>
 </head>
 <body>
@@ -781,7 +813,9 @@ const ICON={
   now:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/></svg>',
   week:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>',
   ins:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 19V11M12 19V5M19 19v-6"/></svg>',
-  add:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>'
+  add:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  swap:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4v15M4 8l4-4 4 4M16 20V5M12 16l4 4 4-4"/></svg>',
+  note:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>'
 };
 tabs.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;
   if(b.dataset.tab==="add"){addNew();return}
@@ -804,7 +838,7 @@ function render(animate){
 }
 function header(sub){
   const d=today();
-  return '<header class="glass tilt"><div><div class="ttl">Τώρα</div><div class="day">'+(sub||DAYS[d.getDay()]+" "+d.getDate()+"/"+(d.getMonth()+1))+'</div></div><div class="sp"></div><span class="sync"></span></header>';
+  return '<header class="glass tilt"><div><div class="ttl">Τώρα</div><div class="day">'+(sub||DAYS[d.getDay()]+" "+d.getDate()+"/"+(d.getMonth()+1))+'</div></div><div class="sp"></div>'+sndBtn()+'<span class="sync"></span></header>';
 }
 function ruleHtml(r){const i=r.indexOf(". ");return i>0?"<b>"+esc(r.slice(0,i+1))+"</b> "+esc(r.slice(i+2)):esc(r)}
 
@@ -846,7 +880,8 @@ function renderNow(animate){
     h+=prog?'<div class="run"><div class="tmr" id="tmr">'+fmtEl(Date.now()-new Date(ev.started_at))+'</div>'+(dur?'<div class="pbar"><i id="pbar"></i></div><div class="plab" id="plab"></div>':'')+'</div>':'';
     h+='<div class="btns">'+(!prog&&canStart(b)?'<button class="btn start tap" data-act="start">Ξεκίνα</button>':'')+'<button class="btn done tap" data-act="done">✓ Έγινε</button><button class="btn skip tap" data-act="skip">Παράλειψη</button></div></section>';
     if(hasUndo) h+='<button class="undo tap" data-act="undo">↶ Αναίρεση</button>';
-    if(n) h+='<div class="glass tilt next tap'+A2+'" data-act="peek"><div><div class="k">Μετά</div><div class="t">'+esc(n.n)+'</div></div><div class="tm">'+esc(n.t)+"</div></div>";
+    if(n) h+='<div class="glass tilt next tap'+A2+'" data-act="peek"><div><div class="k">Μετά</div><div class="t">'+esc(n.n)+'</div></div><div class="tm">'+esc(n.t)+"</div>"+
+      (canSwap(b,n,ev,st[i+1])?'<button class="swp tap" data-act="swap" aria-label="Κάνε πρώτα αυτό">'+ICON.swap+'</button>':'')+"</div>";
   }
   if(FEATURES.rules) h+='<div class="glass sec'+(S.open.rules?" open":"")+'"><div class="hd tap" data-act="tog" data-s="rules"><span>Κανόνες</span><span>⌄</span></div><div class="bd">'+S.rules.map(r=>'<div class="rule tap">'+ruleHtml(r)+"</div>").join("")+"</div></div>";
   root.innerHTML=h;
@@ -921,11 +956,155 @@ function undoNow(){
   else{S.events=S.events.filter(x=>x!==last);track(DB.delEvent(dk,last.pos))}
   render(true);
 }
+/* ---------- swap: do the next step first ----------
+   ⇅ on the «Μετά» card. Today only: a weekly step becomes a one-off that `replaces` it
+   (same path as moveStep's "Μόνο σήμερα"). Both clock times: the next one takes the
+   current start, the current one goes after it; ranges keep their length. Otherwise
+   (a word like «απόγευμα») the two times are exchanged. Steps without any time have no
+   place in the clock order, so there is nothing to swap and no button. Nested steps
+   travel with their host. */
+function canSwap(a,b,ea,eb){return !!(a&&b&&!ea&&!eb&&ordM(a.t)!=null&&ordM(b.t)!=null)}
+function swapNow(){
+  const dk=key(today()),{list,st,cur}=dayState(dk),a=list[cur],b=list[cur+1];
+  if(!canSwap(a,b,st[cur],st[cur+1]))return;
+  const sn=snap([gk(a),gk(b),dk]),W=windows(planDay(dk)),ka=kidsOf(a,dk),kb=kidsOf(b,dk);
+  let ta=b.t,tb=a.t;
+  if(clockT(a.t)&&clockT(b.t)){
+    const len=x=>parseT(x.t).mode==="range"?W[x.id].e-W[x.id].s:null,la=len(a),lb=len(b);
+    const sb=W[a.id].s,sa=lb!=null?sb+lb:W[b.id].s;
+    tb=tWith(b,sb,lb!=null?sb+lb:null);ta=tWith(a,sa,la!=null?sa+la:null);
+  }
+  const sh=(x,nt)=>{const w=W[x.id];return w&&!w.untimed&&clockT(nt)?dm(parseT(nt).a)-w.s:0},da=sh(a,ta),db=sh(b,tb);
+  /* Both land in a's slot (anchor = visible template rows before it). placeByTime alone would
+     anchor past an untimed step like «κατευθείαν» that sits between them and the next clock time. */
+  const P=planDay(dk),anc=P.slice(0,P.indexOf(a)).filter(x=>!x.date).length;
+  putT(a,dk,ta,!a.date).pos=anc;putT(b,dk,tb,!b.date).pos=anc;
+  ka.forEach(k=>putT(k,dk,shiftT(k.t,da),!k.date));kb.forEach(k=>putT(k,dk,shiftT(k.t,db),!k.date));
+  saveDays(sn.keys);buzz([8,30,8]);
+  const c=document.getElementById("card"),nx=document.querySelector(".next");
+  if(c){const r=c.getBoundingClientRect();ripple(r.left+r.width/2,r.bottom,260,1)}
+  [c,nx].forEach(n=>n&&n.classList.add("swapping"));
+  setTimeout(()=>{render(true);snack("Πρώτα «"+b.n+"»"+(!a.date||!b.date?" · μόνο σήμερα":""),()=>restore(sn))},RM.matches?0:210);
+}
+
+/* ---------- Παράλειψη: are you sure? (the koi is sad) ---------- */
+const SAD_KOI='<svg viewBox="0 0 220 150" aria-hidden="true"><ellipse cx="110" cy="138" rx="70" ry="7" fill="rgba(0,0,0,.25)"/>'+
+  '<g class="koi"><path d="M40 72 C18 50 8 46 4 50 C14 66 14 80 4 96 C10 100 22 94 40 80Z" fill="#f6f1ea" opacity=".88"/>'+
+  '<ellipse cx="108" cy="76" rx="74" ry="40" fill="#f6f1ea"/>'+
+  '<path d="M70 44 C86 30 116 30 128 40 C112 46 92 50 70 44Z" fill="#D97757"/><ellipse cx="86" cy="86" rx="20" ry="13" fill="#D97757" transform="rotate(-18 86 86)"/>'+
+  '<ellipse cx="138" cy="60" rx="16" ry="11" fill="#e8743f" opacity=".85"/>'+
+  '<path d="M104 108 C98 124 112 128 118 112Z" fill="#f3c25b" opacity=".8"/>'+
+  '<circle cx="158" cy="70" r="10" fill="#fff"/><circle cx="160" cy="74" r="5.5" fill="#1d1d1d"/><circle cx="162" cy="72" r="1.6" fill="#fff"/>'+
+  '<path d="M146 56 L168 62" stroke="#1d1d1d" stroke-width="3" stroke-linecap="round"/>'+
+  '<path d="M162 98 C168 90 176 90 180 96" fill="none" stroke="#1d1d1d" stroke-width="3" stroke-linecap="round"/>'+
+  '<path class="tear" d="M156 84 C152 92 152 96 156 97 C160 96 160 92 156 84Z" fill="#9fd8f0"/></g>'+
+  '<circle cx="196" cy="40" r="5" fill="none" stroke="rgba(220,245,240,.5)" stroke-width="1.5"/><circle cx="204" cy="22" r="3" fill="none" stroke="rgba(220,245,240,.4)" stroke-width="1.2"/></svg>';
+function askSkip(btn){
+  const {list,cur}=dayState(key(today())),b=list[cur];if(!b)return;
+  openSheet('<div class="sheet glass"><div class="grab"></div><div class="edtop"><button class="txtbtn tap" data-e="close">Άκυρο</button><div class="ttl"></div><span></span></div><div class="edbody"><div class="sadc">'+SAD_KOI+
+    '<h3>Σίγουρα το παραλείπεις;</h3><p>«'+esc(b.n)+'»</p><p>Το ψαράκι στεναχωριέται λίγο. Αν όμως δεν βγαίνει, δεν βγαίνει.</p>'+
+    '<div class="acts"><button class="btn done tap" data-k="keep">Όχι, θα το κάνω</button><button class="btn skip tap" data-k="skip">Ναι, παράλειψη</button></div></div></div></div>',false);
+  buzz([20,60,20]);
+  HOST.onclick=e=>{if(e.target===ed){closeEd();return}
+    const k=e.target.closest("[data-k]");
+    if(k){closeEd();if(k.dataset.k==="skip"){const s=document.querySelector('#card [data-act="skip"]');advance("s",s||btn)}return}
+    if(e.target.closest("[data-e=close]"))closeEd()};
+}
+
+/* ---------- Ήχοι: relaxing sounds and music ----------
+   Everything is synthesised with Web Audio (no files, works offline): Βροχή, Κύματα, Λίμνη
+   (low water + plops), and a slow generative pad (Μουσική) that can play over any of them.
+   Browsers only start audio from a tap, so a saved choice resumes on the first touch. */
+const SND={on:false,ctx:null,out:null,amb:null,mus:null,cfg:ld("tora-sound",{amb:"off",music:false,vol:.6})};
+const AMB=[["off","Τίποτα","·"],["rain","Βροχή","☔"],["waves","Κύματα","🌊"],["pond","Λίμνη","🪷"]];
+function sndOn(){return SND.cfg.amb!=="off"||SND.cfg.music}
+function sndBtn(){return '<button class="ibtn snd tap'+(sndOn()?" on":"")+'" data-act="snd" aria-label="Ήχοι">'+(sndOn()&&SND.on?'<span class="eq"><i></i><i></i><i></i></span>':ICON.note)+'</button>'}
+function sndRefresh(){const n=document.querySelector(".ibtn.snd");if(n)n.outerHTML=sndBtn()}
+function actx(){
+  if(!SND.ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;SND.ctx=new C();
+    SND.out=SND.ctx.createGain();SND.out.gain.value=0;SND.out.connect(SND.ctx.destination)}
+  try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}
+  if(SND.ctx.state!=="running")SND.ctx.resume();return SND.ctx}
+function noiseBuf(c,kind){const n=c.sampleRate*4,buf=c.createBuffer(1,n,c.sampleRate),d=buf.getChannelData(0);let l=0;
+  for(let i=0;i<n;i++){const w=Math.random()*2-1;if(kind==="brown"){l=(l+.02*w)/1.02;d[i]=l*3.5}else d[i]=w}return buf}
+function noiseSrc(c,kind){const s=c.createBufferSource();s.buffer=noiseBuf(c,kind);s.loop=true;s.start();return s}
+/* A layer = {g: its gain node, stop()}. Timers live on the layer so stopping it ends them. */
+function layer(c){const g=c.createGain();g.gain.value=0;g.connect(SND.out);return {g,tm:[],src:[],stop(){const t=c.currentTime;g.gain.cancelScheduledValues(t);g.gain.setTargetAtTime(0,t,.4);this.tm.forEach(clearTimeout);setTimeout(()=>{this.src.forEach(s=>{try{s.stop()}catch(e){}});g.disconnect()},2500)}}}
+function loopT(L,fn,min,max){const go=()=>{fn();L.tm.push(setTimeout(go,min+Math.random()*(max-min)))};L.tm.push(setTimeout(go,min*Math.random()))}
+function blip(c,dst,f0,f1,dur,vol,type){const t=c.currentTime,o=c.createOscillator(),g=c.createGain();o.type=type||"sine";o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);g.connect(dst);o.start(t);o.stop(t+dur+.05)}
+function ambient(c,kind){
+  const L=layer(c);
+  if(kind==="rain"){
+    const n=noiseSrc(c,"white"),hp=c.createBiquadFilter(),lp=c.createBiquadFilter();hp.type="highpass";hp.frequency.value=500;lp.type="lowpass";lp.frequency.value=5200;
+    const v=c.createGain();v.gain.value=.16;n.connect(hp);hp.connect(lp);lp.connect(v);v.connect(L.g);
+    const b=noiseSrc(c,"brown"),bv=c.createGain();bv.gain.value=.35;b.connect(bv);bv.connect(L.g);L.src.push(n,b);
+    loopT(L,()=>blip(c,L.g,2400+Math.random()*2600,900,.05,.05*Math.random()+.015),40,240);
+  }else if(kind==="waves"){
+    const n=noiseSrc(c,"brown"),lp=c.createBiquadFilter(),v=c.createGain();lp.type="lowpass";lp.frequency.value=700;v.gain.value=.5;
+    const lfo=c.createOscillator(),lg=c.createGain(),lf=c.createGain();lfo.frequency.value=.085;lg.gain.value=.38;lf.gain.value=450;
+    lfo.connect(lg);lg.connect(v.gain);lfo.connect(lf);lf.connect(lp.frequency);lfo.start();
+    const w=noiseSrc(c,"white"),wh=c.createBiquadFilter(),wv=c.createGain();wh.type="bandpass";wh.frequency.value=2500;wh.Q.value=.5;wv.gain.value=.03;const wl=c.createGain();wl.gain.value=.025;lfo.connect(wl);wl.connect(wv.gain);
+    n.connect(lp);lp.connect(v);v.connect(L.g);w.connect(wh);wh.connect(wv);wv.connect(L.g);L.src.push(n,w,lfo);
+  }else if(kind==="pond"){
+    const n=noiseSrc(c,"brown"),lp=c.createBiquadFilter(),v=c.createGain();lp.type="lowpass";lp.frequency.value=420;v.gain.value=.45;n.connect(lp);lp.connect(v);v.connect(L.g);
+    const s=noiseSrc(c,"white"),bp=c.createBiquadFilter(),sv2=c.createGain();bp.type="bandpass";bp.frequency.value=1400;bp.Q.value=1.2;sv2.gain.value=.025;s.connect(bp);bp.connect(sv2);sv2.connect(L.g);L.src.push(n,s);
+    loopT(L,()=>{blip(c,L.g,700+Math.random()*500,180,.16,.07);if(Math.random()<.4)setTimeout(()=>blip(c,L.g,1500,600,.06,.025),90)},1800,5200);
+    loopT(L,()=>{if(!document.hidden)ripple(Math.random()*W,Math.random()*H,70,.5)},4000,9000);
+  }
+  return L;
+}
+/* Slow pad: a drone on the root and fifth, and soft pentatonic notes through a feedback echo. */
+function music(c){
+  const L=layer(c),lp=c.createBiquadFilter(),dl=c.createDelay(2),fb=c.createGain(),wet=c.createGain();
+  lp.type="lowpass";lp.frequency.value=1800;dl.delayTime.value=.62;fb.gain.value=.42;wet.gain.value=.5;
+  lp.connect(L.g);lp.connect(dl);dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(L.g);
+  const CH=[[146.83,220],[123.47,185],[130.81,196],[110,164.81]],SC=[293.66,329.63,369.99,440,493.88,587.33,659.25,739.99];let ci=0;
+  const pad=(f,t,len,vol)=>{[0,4].forEach(dt=>{const o=c.createOscillator(),g=c.createGain();o.type="triangle";o.frequency.value=f;o.detune.value=dt?7:-7;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+len*.35);g.gain.linearRampToValueAtTime(0,t+len);o.connect(g);g.connect(lp);o.start(t);o.stop(t+len+.1)})};
+  const chord=()=>{const t=c.currentTime,ch=CH[ci++%CH.length];ch.forEach(f=>pad(f,t,17,.05));pad(ch[0]/2,t,17,.04)};
+  const note=()=>{const t=c.currentTime,f=SC[Math.floor(Math.random()*SC.length)],o=c.createOscillator(),g=c.createGain();o.type="sine";o.frequency.value=f;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.07,t+.9);g.gain.exponentialRampToValueAtTime(.0005,t+5.5);o.connect(g);g.connect(lp);o.start(t);o.stop(t+5.6)};
+  chord();L.tm.push(setInterval(chord,15000));loopT(L,note,2600,6500);
+  return L;
+}
+function sndApply(){
+  const cfg=SND.cfg;if(!sndOn()){sndStop();return}
+  const c=actx();if(!c)return;SND.on=true;
+  if(!SND.amb||SND.amb.kind!==cfg.amb){if(SND.amb)SND.amb.stop();SND.amb=cfg.amb!=="off"?Object.assign(ambient(c,cfg.amb),{kind:cfg.amb}):null;if(SND.amb)SND.amb.g.gain.setTargetAtTime(1,c.currentTime,.8)}
+  if(cfg.music&&!SND.mus){SND.mus=music(c);SND.mus.g.gain.setTargetAtTime(1,c.currentTime,1.2)}
+  else if(!cfg.music&&SND.mus){SND.mus.stop();SND.mus=null}
+  SND.out.gain.setTargetAtTime(cfg.vol*cfg.vol,c.currentTime,.3);sndRefresh();
+}
+function sndStop(){SND.on=false;if(SND.amb){SND.amb.stop();SND.amb=null}if(SND.mus){SND.mus.stop();SND.mus=null}sndRefresh()}
+function sndSave(){sv("tora-sound",SND.cfg)}
+/* resume a saved choice on the first touch (audio needs a gesture) */
+document.addEventListener("pointerdown",function first(){document.removeEventListener("pointerdown",first,true);if(sndOn()&&!SND.on)sndApply()},true);
+function openSound(){
+  const draw=()=>{const cfg=SND.cfg;
+    return '<div class="sheet glass"><div class="grab"></div><div class="edtop"><span></span><div class="ttl">Ήχοι</div><button class="txtbtn tap" data-e="close">OK</button></div><div class="edbody">'+
+    '<div class="slab">Φύση</div><div class="sgrid">'+AMB.map(([k,l,i])=>'<button class="rowbtn tap'+(cfg.amb===k?" on":"")+'" data-amb="'+k+'"><span>'+i+'</span>'+l+'</button>').join("")+'</div>'+
+    '<div class="slab">Μουσική</div><div class="sgrid"><button class="rowbtn tap'+(!cfg.music?" on":"")+'" data-mus="0"><span>·</span>Χωρίς</button><button class="rowbtn tap'+(cfg.music?" on":"")+'" data-mus="1"><span>♫</span>Ήρεμη μουσική</button></div>'+
+    '<div class="slab">Ένταση</div><input class="svol" type="range" min="0.05" max="1" step="0.01" value="'+cfg.vol+'" aria-label="Ένταση"></div></div>'};
+  openSheet(draw(),false);
+  const redraw=()=>{HOST.querySelectorAll("[data-amb]").forEach(n=>n.classList.toggle("on",n.dataset.amb===SND.cfg.amb));
+    HOST.querySelectorAll("[data-mus]").forEach(n=>n.classList.toggle("on",(n.dataset.mus==="1")===SND.cfg.music));buzz(6)};
+  const bindVol=()=>{const r=HOST.querySelector(".svol");if(r)r.oninput=()=>{SND.cfg.vol=+r.value;sndSave();if(SND.on&&SND.out)SND.out.gain.setTargetAtTime(SND.cfg.vol*SND.cfg.vol,SND.ctx.currentTime,.1)}};
+  bindVol();
+  HOST.onclick=e=>{if(e.target===ed){closeEd();return}
+    const a=e.target.closest("[data-amb]"),m=e.target.closest("[data-mus]");
+    if(a){SND.cfg.amb=a.dataset.amb;sndSave();sndApply();redraw();return}
+    if(m){SND.cfg.music=m.dataset.mus==="1";sndSave();sndApply();redraw();return}
+    if(e.target.closest("[data-e=close]"))closeEd()};
+}
+
 root.addEventListener("click",e=>{
   const t=e.target.closest("[data-act]");if(!t)return;const a=t.dataset.act;const dk=key(today());
   if(a==="done")advance("d",t);
   else if(a==="start")startNow(t);
-  else if(a==="skip")advance("s",t);
+  else if(a==="skip")askSkip(t);
+  else if(a==="swap"){e.stopPropagation();swapNow()}
+  else if(a==="snd")openSound();
   else if(a==="undo")undoNow();
   else if(a==="idone")markInside(t.dataset.bid,"d",t);
   else if(a==="iskip")markInside(t.dataset.bid,"s",t);
@@ -1074,13 +1253,15 @@ function shiftT(t,d){if(!d||!clockT(t))return t;const st=parseT(t);return (st.ap
 /* scope "all": the weekly row itself moves (every week). scope "day": a one-off that `replaces` the
    weekly row on that date only (the row is untouched on other weeks). A one-off is just edited.
    Known gap: a one-off host moved to another DAY leaves weekly nested steps behind. */
+/* Give x the time nt on date `to`. one=true: a one-off that replaces the weekly row on that date only. */
+function putT(x,to,nt,one){const wdT=parseKey(to).getDay();let tg=x;
+  if(one){tg=cloneBlock(x,{date:to,weekday:wdT,replaces:x.id,t:nt});S.blocks.push(tg)}
+  else{x.t=nt;if(x.date){if(x.date!==to)x.replaces=null;x.date=to;x.weekday=wdT}else x.weekday=wdT}
+  placeByTime(tg);return tg}
 function moveStep(b,from,to,t,scope){
   const wdT=parseKey(to).getDay(),sn=snap([gk(b),to,wdT]);
   const kids=kidsOf(b,from),ow=windows(planDay(from))[b.id],d=ow&&!ow.untimed&&clockT(t)?dm(parseT(t).a)-ow.s:0;
-  const put=(x,nt,one)=>{let tg=x;
-    if(one){tg=cloneBlock(x,{date:to,weekday:wdT,replaces:x.id,t:nt});S.blocks.push(tg)}
-    else{x.t=nt;if(x.date){if(x.date!==to)x.replaces=null;x.date=to;x.weekday=wdT}else x.weekday=wdT}
-    placeByTime(tg);return tg};
+  const put=(x,nt,one)=>putT(x,to,nt,one);
   const dayOnly=!b.date&&scope==="day",tg=put(b,t,dayOnly);
   kids.forEach(k=>put(k,shiftT(k.t,d),k.date?false:(dayOnly||!!b.date)));
   saveDays(sn.keys);
