@@ -975,8 +975,8 @@ function swapNow(){
     tb=tWith(b,sb,lb!=null?sb+lb:null);ta=tWith(a,sa,la!=null?sa+la:null);
   }
   const sh=(x,nt)=>{const w=W[x.id];return w&&!w.untimed&&clockT(nt)?dm(parseT(nt).a)-w.s:0},da=sh(a,ta),db=sh(b,tb);
-  /* Both land in a's slot (anchor = visible template rows before it). placeByTime alone would
-     anchor past an untimed step like «κατευθείαν» that sits between them and the next clock time. */
+  /* Both land in a's slot (anchor = visible template rows before it), so the pair stays
+     together ahead of an untimed step like «κατευθείαν» that followed them. */
   const P=planDay(dk),anc=P.slice(0,P.indexOf(a)).filter(x=>!x.date).length;
   putT(a,dk,ta,!a.date).pos=anc;putT(b,dk,tb,!b.date).pos=anc;
   ka.forEach(k=>putT(k,dk,shiftT(k.t,da),!k.date));kb.forEach(k=>putT(k,dk,shiftT(k.t,db),!k.date));
@@ -1427,8 +1427,11 @@ function cloneBlock(b,extra){return Object.assign({},b,{id:uuid(),list:b.list?JS
 const WORDM={"πρωί":480,"μεσημέρι":780,"απόγευμα":1020,"βράδυ":1260};
 function dm(hm){const p=hm.split(":").map(Number),x=p[0]*60+p[1];return x<240?x+1440:x}
 function ordM(t){const st=parseT(t);if(st.empty)return null;if(st.mode==="label")return st.empty?null:(WORDM[st.label.trim()]!=null?WORDM[st.label.trim()]:null);return dm(st.a)}
-/* Where a block goes in time order: before the first row that starts later. */
-function timeIndex(rows,t){const m=ordM(t);if(m==null)return rows.length;const j=rows.findIndex(r=>{const x=ordM(r.t);return x!=null&&x>m});return j<0?rows.length:j}
+/* Where a block goes in time order: before the first row that starts later. An untimed step
+   («κατευθείαν») follows the timed step before it; one with no timed step before it (its own was
+   replaced or moved for that day) goes with the next one, so the new block lands before it too. */
+function timeIndex(rows,t){const m=ordM(t);if(m==null)return rows.length;let j=rows.findIndex(r=>{const x=ordM(r.t);return x!=null&&x>m});if(j<0)return rows.length;
+  if(rows.slice(0,j).every(r=>ordM(r.t)==null))j=0;return j}
 /* Put b into its day in time order (template: renumber; one-off: anchor). */
 function placeByTime(b){
   if(b.date){const tpl=planDay(b.date).filter(x=>!x.date&&x.id!==b.id);b.pos=timeIndex(tpl,b.t);return}

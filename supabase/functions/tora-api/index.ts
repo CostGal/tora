@@ -151,7 +151,14 @@ function timeSort(list: Block[]) {
   items.sort((x, y) => x.m - y.m || x.i - y.i);
   const out = list.slice(); slots.forEach((k, j) => (out[k] = items[j].b)); return out;
 }
-function timeIndex(rows: Block[], t: string) { const m = ordM(t); if (m == null) return rows.length; const j = rows.findIndex((r) => { const x = ordM(r.t); return x != null && x > m; }); return j < 0 ? rows.length : j; }
+/** Before the first row that starts later. Leading untimed rows (no timed row before them, e.g. the
+ *  step they followed was replaced that day) go with the next timed row, so b lands before them. */
+function timeIndex(rows: Block[], t: string) {
+  const m = ordM(t); if (m == null) return rows.length;
+  let j = rows.findIndex((r) => { const x = ordM(r.t); return x != null && x > m; }); if (j < 0) return rows.length;
+  if (rows.slice(0, j).every((r) => ordM(r.t) == null)) j = 0;
+  return j;
+}
 /** Puts b (already in `all`) in time order and returns the rows whose pos changed. */
 function placeByTime(all: Block[], b: Block): Block[] {
   if (b.date) { const tpl = planDay(all, b.date).filter((x) => !x.date && x.id !== b.id); b.pos = timeIndex(tpl, b.t); return [b]; }
