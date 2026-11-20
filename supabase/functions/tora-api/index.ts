@@ -134,12 +134,14 @@ async function loadBlocks(uid: string): Promise<Block[]> {
   return (data ?? []) as Block[];
 }
 const tmpl = (all: Block[], wd: number) => all.filter((b) => !b.date && b.weekday === wd).sort((a, b) => a.pos - b.pos);
+/** Same as index.html: a one-off's pos is its anchor, or (pos >= 1000) (anchor+1)*1000 + its order in that gap. */
+const okey = (o: Block) => (o.pos >= 1000 ? o.pos - 1000 : o.pos * 1000);
 function planDay(all: Block[], dk: string) {
-  const oo = all.filter((b) => b.date === dk).sort((a, b) => a.pos - b.pos);
+  const oo = all.filter((b) => b.date === dk).sort((a, b) => okey(a) - okey(b));
   const hide = new Set(oo.map((b) => b.replaces).filter(Boolean));
   const tpl = tmpl(all, wdOf(dk)).filter((b) => !hide.has(b.id)); const out: Block[] = [];
   for (let i = 0; i <= tpl.length; i++) {
-    for (const o of oo) if (Math.min(Math.max(0, Math.round(o.pos)), tpl.length) === i) out.push(o);
+    for (const o of oo) if (Math.min(Math.max(0, Math.floor(okey(o) / 1000)), tpl.length) === i) out.push(o);
     if (i < tpl.length) out.push(tpl[i]);
   }
   return timeSort(out);
