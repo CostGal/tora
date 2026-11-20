@@ -245,7 +245,16 @@ body.mdrag .day.src{position:relative;z-index:20}
 .bk .tg{width:4px;align-self:stretch;min-height:24px;border-radius:2px;flex:none}
 .bk .bn{flex:1;min-width:0;overflow-wrap:anywhere;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .bk .bl{flex:none;font-size:11px;padding:2px 6px;border-radius:8px;background:rgba(255,255,255,.1);color:var(--mut)}
-.bk.past{opacity:.45}
+.bk.dn,.bk.sk{opacity:.45}
+.bk.sk .bn{text-decoration:line-through}
+.zone{position:fixed;top:50%;z-index:40;width:58px;height:220px;margin-top:-110px;display:flex;align-items:center;justify-content:center;border-radius:20px;pointer-events:none;opacity:0;transition:opacity .2s,transform .25s cubic-bezier(.2,.9,.25,1),background .2s;background:rgba(20,30,30,.85);border:1px solid rgba(255,255,255,.14);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.zone span{writing-mode:vertical-rl;font-size:15px;font-weight:600;white-space:nowrap;color:var(--txt)}
+.zone.del{left:-14px;transform:translateX(-30px)}.zone.del span{transform:rotate(180deg)}
+.zone.next{right:-14px;transform:translateX(30px)}
+body.mdrag .zone{opacity:1;transform:none}
+.zone.del.hot{background:rgba(200,64,52,.92);width:76px}
+.zone.next.hot{background:rgba(217,119,87,.95);width:76px}
+body.mdrag .bk.lift.zoned{transform:translate(var(--dx,0px),var(--dy,0px)) scale(.86);opacity:.85}
 .bk.cur{border-color:rgba(217,119,87,.65);background:rgba(217,119,87,.13)}
 .seg{display:flex;gap:4px;padding:4px;border-radius:16px;margin:0 0 12px}
 .seg button{flex:1;min-height:44px;border:0;border-radius:12px;background:transparent;color:var(--mut);font-family:inherit;font-size:15px;font-weight:600}
@@ -284,37 +293,14 @@ select{width:100%;font-family:inherit;font-size:16px;color:var(--txt);background
 #pushask.on{transform:translate(-50%,0);opacity:1;pointer-events:auto}
 #pushask p{font-size:15px;line-height:1.4;margin:0 4px 10px}
 #pushask div{display:flex;gap:8px;align-items:center}#pushask .btn{flex:1;padding:13px 14px;font-size:16px}
-/* ---------- + question flow ---------- */
-#qf{position:fixed;inset:0;z-index:15;display:none;background:rgba(3,10,10,.4);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-#qf.open{display:block}
-#qf.closing .qin{transition:transform .26s,opacity .26s;transform:scale(.94);opacity:0}
-.qin{position:absolute;inset:calc(env(safe-area-inset-top) + 10px) 10px calc(env(safe-area-inset-bottom) + 10px);max-width:560px;margin:0 auto;display:flex;flex-direction:column;border-radius:28px;background:linear-gradient(160deg,rgba(30,44,44,.78),rgba(14,20,20,.86));animation:enter .45s cubic-bezier(.2,.9,.25,1.1)}
-.qtop{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 0}
-.qdots{display:flex;gap:7px}
-.qdots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2);transition:all .3s}
-.qdots i.d{background:var(--ok)}
-.qdots i.c{background:var(--acc);transform:scale(1.3);box-shadow:0 0 10px var(--acc)}
-.qbody{flex:1;overflow-y:auto;padding:22px 20px 10px;animation:enter .35s cubic-bezier(.2,.9,.25,1.1)}
-.qbody.qout{transition:opacity .14s,transform .14s;opacity:0;transform:translateX(-18px)}
-.qbody h2{font-size:34px;font-weight:600;margin:4px 2px 18px}
-.qbig{font-size:24px!important;font-weight:500;padding:16px 16px!important;border-radius:16px!important}
-.qtags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-.qtags button{min-height:36px;padding:0 10px;border-radius:10px;border:1px solid var(--edge);background:rgba(255,255,255,.05);color:var(--mut);font-family:inherit;font-size:13px;display:flex;align-items:center;gap:6px}
-.qtags button i{width:7px;height:7px;border-radius:50%}
-.qtags button.on{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.4);color:var(--txt)}
+/* ---------- + quick add ---------- */
+.qa .r2 .big{font-size:18px}
+.qa .qchips{margin:2px 0 6px}
+.qmore{display:block;margin:6px auto 0;font-size:14px;opacity:.75}
 .qchips{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 14px}
 .qchips .chipb{min-height:50px;padding:0 18px;font-size:16px;border-radius:14px}
 .qdate{position:relative;display:inline-flex;align-items:center}
 .qdate input{position:absolute;inset:0;opacity:0;width:100%;height:100%;padding:0;border:0}
-.qskip{width:100%;min-height:56px;margin-bottom:16px;border-radius:16px;border:1.5px dashed rgba(255,255,255,.3);background:transparent;color:var(--txt);font-family:inherit;font-size:16px}
-.qtime{font-size:22px!important;max-width:180px;font-variant-numeric:tabular-nums;margin-bottom:6px}
-.qsub{color:var(--mut);margin:-8px 2px 10px}
-.qopts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
-.qopts .rowbtn{min-height:58px;white-space:normal;line-height:1.25;padding:6px 10px}
-.qopts .rowbtn.in{grid-column:1/-1;border-color:rgba(217,119,87,.55);background:rgba(217,119,87,.14)}
-.qopts .rowbtn small{display:block;font-size:12px;font-weight:400;color:var(--mut);margin-top:2px}
-.qfoot{display:flex;gap:10px;padding:12px 16px 16px}
-.qfoot .btn{flex:1}
 
 /* ---------- desktop planner + side panel ---------- */
 #root.wide{max-width:1500px;padding-left:24px;padding-right:24px;transition:padding .3s}
@@ -645,11 +631,14 @@ const S={view:ld('tora-view','now'),blocks:[],events:[],rules:[],ot:[],ready:fal
    that day's template rows it sits before. A one-off with `replaces` hides
    that template row on its date. */
 function dayBlocks(wd){ return S.blocks.filter(b=>!b.date&&b.weekday===+wd).sort((a,b)=>a.pos-b.pos); }
-function oneOffs(dk){ return S.blocks.filter(b=>b.date===dk).sort((a,b)=>a.pos-b.pos); }
+/* A one-off's pos is an anchor (the template index it sits before). Untimed one-offs in the same gap
+   need an order too, so pos >= 1000 packs both: (anchor+1)*1000 + order. Plain small pos = old rows. */
+function okey(o){return o.pos>=1000?o.pos-1000:o.pos*1000}
+function oneOffs(dk){ return S.blocks.filter(b=>b.date===dk).sort((a,b)=>okey(a)-okey(b)); }
 function planDay(dk){
   const oo=oneOffs(dk),hide=new Set(oo.map(b=>b.replaces).filter(Boolean));
   const tpl=dayBlocks(parseKey(dk).getDay()).filter(b=>!hide.has(b.id)),out=[];
-  for(let i=0;i<=tpl.length;i++){ oo.forEach(o=>{ if(Math.min(Math.max(0,Math.round(o.pos)),tpl.length)===i) out.push(o); }); if(i<tpl.length) out.push(tpl[i]); }
+  for(let i=0;i<=tpl.length;i++){ oo.forEach(o=>{ if(Math.min(Math.max(0,Math.floor(okey(o)/1000)),tpl.length)===i) out.push(o); }); if(i<tpl.length) out.push(tpl[i]); }
   return timeSort(out);
 }
 /* The day is always in clock order: steps with a time (or a known word like
@@ -833,7 +822,7 @@ tabs.addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)r
 /* The + button. Replaced by the question flow (mobile) / side panel (desktop). */
 function addNew(){
   if(isDesk()){if(S.view!=="week"){S.view="week";sv('tora-view',S.view);render(true)}openBlock(null,{weekday:today().getDay(),ndate:key(today())},true);return}
-  addFlow()}
+  quickAdd()}
 
 function render(animate){
   drawTabs();
@@ -930,12 +919,12 @@ function markInside(bid,mark,btn){
 }
 function tickRun(){
   if(S.view!=="now"||!RUN.card||!RUN.card.isConnected)return;
-  if(RUN.inn&&dueN(RUN.inn)!==RUN.due&&!edOpen()&&!qf.classList.contains("open")){render(false);return}
+  if(RUN.inn&&dueN(RUN.inn)!==RUN.due&&!edOpen()){render(false);return}
   if(RUN.ev){const el=Date.now()-new Date(RUN.ev.started_at),t=document.getElementById("tmr");if(t)t.textContent=fmtEl(el);
     const d=durOf(RUN.b),bar=document.getElementById("pbar");
     if(d&&bar){const f=el/(d*60000),over=f>=1;bar.style.width=Math.min(100,f*100)+"%";RUN.card.classList.toggle("over",over);
       const lab=document.getElementById("plab");if(lab)lab.textContent=over?"Ο χρόνος που είχες βάλει πέρασε":"από "+(d>=60?Math.floor(d/60)+"ω"+(d%60?" "+d%60+"'":""):d+"'")}}
-  else if(RUN.b&&!RUN.can&&canStart(RUN.b)&&!edOpen()&&!qf.classList.contains("open"))render(false);
+  else if(RUN.b&&!RUN.can&&canStart(RUN.b)&&!edOpen())render(false);
 }
 setInterval(tickRun,1000);
 function startNow(btn){
@@ -1145,10 +1134,11 @@ function renderWeek(animate){
   if(isDesk()){renderPlanner(animate);return}
   /* mobile: the next seven days as one vertical list, a sticky header per day. Today's finished
      steps are dimmed and the current one is marked, so the list also answers "where am I". */
-  const tdk=key(today()),dates=[0,1,2,3,4,5,6].map(i=>addDays(today(),i)),nw=nowDM();
-  let h=header("Πρόγραμμα")+'<p class="hint wkhint">Κράτα ένα βήμα και σύρε το: αλλάζει σειρά ή μέρα.</p><div class="wl">';
+  const tdk=key(today()),dates=[0,1,2,3,4,5,6].map(i=>addDays(today(),i));
+  let h=header("Πρόγραμμα")+'<p class="hint wkhint">Κράτα και σύρε: σειρά, μέρα, ή στις άκρες για διαγραφή / επόμενη μέρα.</p><div class="wl">';
   h+=dates.map((d,ci)=>{const dk=key(d),wd=d.getDay(),bl=planDay(dk),bw=windows(bl),isT=dk===tdk,lab=dateLabel(dk);
-    const st=b=>{if(!isT)return"";const v=bw[b.id];if(!v||v.untimed)return"";return v.s<=nw&&nw<v.ve?" cur":v.ve<=nw?" past":""};
+    const evs=S.events.filter(e=>e.date===dk),cb=isT?dayState(dk):null,curId=cb&&cb.list[cb.cur]?cb.list[cb.cur].id:null;
+    const st=b=>{const e=evs.find(x=>x.block_id===b.id);return e?(e.status==="d"?" dn":e.status==="s"?" sk":" cur"):b.id===curId?" cur":""};
     return '<section class="day'+(isT?" today":"")+(animate?" enter":"")+'" style="animation-delay:'+(ci*40)+'ms"><div class="dh"><b>'+(/^\D/.test(lab)&&lab.indexOf(" ")<0?lab+'</b><small>'+DAYS[wd]+' '+d.getDate()+'/'+(d.getMonth()+1)+'</small>':DAYS[wd]+'</b><small>'+d.getDate()+'/'+(d.getMonth()+1)+'</small>')+'<span class="sp"></span><button class="ibtn dm tap" data-act="daymenu" data-wd="'+wd+'" aria-label="Επιλογές για '+DAYS[wd]+'">⋯</button></div><div class="dl" data-dk="'+dk+'">'+(bl.length?bl.map(b=>chipHtml(b,bw[b.id].in,st(b))).join(""):'<p class="hint">Κενή μέρα.</p>')+'</div></section>'}).join("")+'</div>';
   if(FEATURES.insights) h+=calendarHtml();
   if(FEATURES.rules) h+='<div class="glass sec open" style="margin-top:14px"><div class="hd tap" data-act="rules"><span>Κανόνες</span><span>✎</span></div><div class="bd">'+S.rules.map(r=>'<div class="rule">'+ruleHtml(r)+"</div>").join("")+"</div></div>";
@@ -1289,6 +1279,33 @@ function doMove(b,from,to,t,scope){
   const where=!wasTpl?(from!==to?" · "+dateLabel(to):""):scope==="day"?" · μόνο "+dateLabel(to).replace(/^Σήμερα$/,"σήμερα").replace(/^Αύριο$/,"αύριο"):" · κάθε "+DAYS[parseKey(to).getDay()];
   snack("Μετακινήθηκε"+where+(t&&r.tg.t===t?" · "+t:"")+(cl.length?" · ⚠ πέφτει πάνω σε «"+cl.map(x=>x.n).join("», «")+"»":""),()=>restore(r.sn),cl.length?9000:0);
 }
+/* Put tg at slot i (among the day's top-level steps, tg left out) without touching its time: the whole
+   day is rewritten in that order (template pos, one-off anchors), so timeSort keeps it as shown. */
+function placeAt(tg,dk,i){
+  const wd=parseKey(dk).getDay(),D=planDay(dk).filter(x=>x.id!==tg.id),w=windows(D),top=D.filter(x=>!w[x.id].in);
+  D.splice(i<top.length?D.indexOf(top[i]):D.length,0,tg);
+  const old=dayBlocks(wd),vis=D.filter(x=>!x.date),tpl=vis.slice();
+  old.forEach((h,k)=>{if(vis.indexOf(h)<0)tpl.splice(Math.min(k,tpl.length),0,h)});
+  tpl.forEach((x,k)=>x.pos=k);
+  let n=0;const sub={};D.forEach(x=>{if(!x.date){n++;return}sub[n]=(sub[n]||0)+1;x.pos=1000+n*1000+sub[n]});
+}
+/* Mark b as skipped on dk (Τώρα moves past it); the undo removes the event again. */
+function skipOn(b,dk){if(S.events.some(e=>e.date===dk&&e.block_id===b.id))return null;
+  const used=S.events.filter(e=>e.date===dk).map(e=>e.pos),e={id:uuid(),user_id:uid(),date:dk,pos:Math.max(100,...used)+1,block_id:b.id,name:b.n,tag:b.tag||"other",status:"s",at:new Date().toISOString(),started_at:null};
+  S.events.push(e);track(DB.putEvent(e));return e}
+function unskip(e){if(!e)return;S.events=S.events.filter(x=>x!==e);track(DB.delEvent(e.date,e.pos))}
+/* Untimed step dropped at slot i of day `to`. scope: "move" (the row itself), "day" (same day, weekly:
+   a one-off that replaces it on that date), "only" (another day, weekly: a one-off there + skipped here). */
+function reorderTo(b,from,to,i,scope){
+  const wdT=parseKey(to).getDay(),sn=snap([gk(b),from,to,wdT,parseKey(from).getDay()]);let tg=b,ev=null;
+  if(scope==="day"){tg=cloneBlock(b,{date:to,weekday:wdT,replaces:b.id});S.blocks.push(tg)}
+  else if(scope==="only"){tg=cloneBlock(b,{date:to,weekday:wdT,replaces:null});S.blocks.push(tg);ev=skipOn(b,from)}
+  else if(b.date){if(b.date!==to)b.replaces=null;b.date=to;b.weekday=wdT}
+  else b.weekday=wdT;
+  placeAt(tg,to,i);saveDays(sn.keys);render(false);flash(tg.id);buzz([10,40,14]);
+  const lab=dateLabel(to).replace(/^Σήμερα$/,"σήμερα").replace(/^Αύριο$/,"αύριο");
+  snack(from===to?"Νέα σειρά"+(scope==="day"?" · μόνο "+lab:!b.date&&scope==="move"?" · κάθε "+DAYS[wdT]:""):"Μετακινήθηκε · "+(scope==="move"&&!b.date?"κάθε "+DAYS[wdT]:lab),()=>{restore(sn);unskip(ev)});
+}
 /* Weekly step moved within its day: say what it changes and let the user pick. */
 function askScope(b,dk,t,go){
   const d=parseKey(dk),wd=d.getDay(),lab=dateLabel(dk).replace(/^Σήμερα$/,"σήμερα").replace(/^Αύριο$/,"αύριο");
@@ -1325,7 +1342,7 @@ function mdLift(){
     rows.forEach(x=>{x.ctop=x.top-(x.after?MD.h:0)});   /* where it sits once the source gap has closed */
     return {dl,dk:dl.dataset.dk,top:r.top+scrollY,bottom:r.bottom+scrollY-(src?MD.h:0),left:r.left,width:r.width,src,rows}});
   MD.i0=MD.lists.find(L=>L.src).rows.filter(x=>x.slot&&!x.after).length;
-  MD.bt=MD.el.querySelector(".bt").outerHTML;MD.key=null;
+  MD.bt=MD.el.querySelector(".bt").outerHTML;MD.key=null;MD.zone=null;
   MD.grp.forEach(n=>n.classList.add("lift"));MD.dl.parentNode.classList.add("src");document.body.classList.add("mdrag");
   MD.slot=document.createElement("div");MD.slot.className="dropslot";document.body.appendChild(MD.slot);
   try{MD.el.setPointerCapture(MD.pid)}catch(_){}
@@ -1333,22 +1350,27 @@ function mdLift(){
 }
 function mdPlace(){
   const yp=MD.y+scrollY,dx=MD.x-MD.x0,dy=MD.y-MD.y0+(scrollY-MD.sy0);
+  /* pulled sideways into an edge zone: no slot in the list */
+  const zone=MD.x<70&&dx<-30?"del":MD.x>innerWidth-70&&dx>30?"next":null;
+  if(zone!==MD.zone){MD.zone=zone;ZN.del.classList.toggle("hot",zone==="del");ZN.next.classList.toggle("hot",zone==="next");MD.el.classList.toggle("zoned",!!zone);if(zone)buzz(10)}
   MD.grp.forEach(n=>{n.style.setProperty("--dx",dx+"px");n.style.setProperty("--dy",dy+"px")});
   /* nearest day list, then the slot index among its top-level rows */
   let L=MD.lists[0],best=Infinity;
   MD.lists.forEach(c=>{const d=yp<c.top?c.top-yp:yp>c.bottom?yp-c.bottom:0;if(d<best){best=d;L=c}});
   const slots=L.rows.filter(x=>x.slot);let i=0;slots.forEach(x=>{if(yp>x.ctop+x.h/2)i++});
   const gapAt=i<slots.length?slots[i]:null,gi=gapAt?L.rows.indexOf(gapAt):L.rows.length;
-  MD.lists.forEach(c=>c.rows.forEach((x,k)=>{const s=(x.after?-MD.h:0)+(c===L&&k>=gi?MD.h:0);if(x.s!==s){x.s=s;x.el.style.transform=s?"translateY("+s+"px)":""}}));
+  MD.lists.forEach(c=>c.rows.forEach((x,k)=>{const s=(x.after?-MD.h:0)+(c===L&&k>=gi&&!zone?MD.h:0);if(x.s!==s){x.s=s;x.el.style.transform=s?"translateY("+s+"px)":""}}));
   const last=L.rows[L.rows.length-1],top=gapAt?gapAt.ctop:last?last.ctop+last.h+6:L.top;
+  MD.slot.style.opacity=zone?"0":"1";
   Object.assign(MD.slot.style,{top:top+"px",left:L.left+"px",width:L.width+"px",height:(MD.h-6)+"px"});
   MD.to=L.dk;MD.i=i;
   const k=L.dk+"|"+i;if(k!==MD.key){MD.key=k;MD.t=mdTime(MD.b,MD.dk,L.dk,i);
-    const same=L.dk===MD.dk&&i===MD.i0;MD.el.querySelector(".bt").outerHTML=same?MD.bt:tcol(MD.t==null?MD.b.t:MD.t).replace('class="bt','class="bt nt');
+    const same=(L.dk===MD.dk&&i===MD.i0)||!clockT(MD.b.t);MD.el.querySelector(".bt").outerHTML=same?MD.bt:tcol(MD.t==null?MD.b.t:MD.t).replace('class="bt','class="bt nt');
     if(!same)buzz(4)}
 }
 /* time the step gets if dropped at slot i of day `to` (null = no timed neighbour to anchor to) */
 function mdTime(b,from,to,i){
+  if(!clockT(b.t))return b.t;
   const L=planDay(to),W=windows(L),kids=from===to?L.filter(x=>W[x.id].in===b.id):[];
   const rest=L.filter(x=>x.id!==b.id&&!kids.includes(x)),W2=windows(rest),top=rest.filter(x=>!W2[x.id].in);
   return dropTime(b,top,W2,i);
@@ -1360,7 +1382,7 @@ function mdEnd(commit){
   if(!was)return;
   MD.grp.forEach(n=>{n.classList.remove("lift");n.style.removeProperty("--dx");n.style.removeProperty("--dy")});
   MD.lists.forEach(c=>c.rows.forEach(x=>{x.el.style.transition="none";x.el.style.transform=""}));
-  MD.slot.remove();MD.dl.parentNode.classList.remove("src");document.body.classList.remove("mdrag");DR_sup=Date.now();
+  MD.slot.remove();MD.dl.parentNode.classList.remove("src");document.body.classList.remove("mdrag");MD.el.classList.remove("zoned");ZN.del.classList.remove("hot");ZN.next.classList.remove("hot");DR_sup=Date.now();
   if(!commit||!mdDrop())render(false);
 }
 /* New start for b if it is dropped before top[i]. null = no timed neighbour to anchor to. */
@@ -1380,7 +1402,15 @@ function dropTime(b,top,W,i){
 /* true = handled (it re-renders itself or opens a sheet) */
 function mdDrop(){
   const b=MD.b,from=MD.dk,to=MD.to;
+  if(MD.zone){zoneDrop(b,from,MD.zone);return true}
   if(from===to&&MD.i===MD.i0)return false;
+  /* no clock time: only the order changes, it stays untimed */
+  if(!clockT(b.t)){
+    if(b.date)reorderTo(b,from,to,MD.i,"move");
+    else if(from===to){render(false);askScope(b,to,"νέα σειρά",sc=>reorderTo(b,from,to,MD.i,sc==="day"?"day":"move"))}
+    else{render(false);askCross(b,from,to,"",sc=>reorderTo(b,from,to,MD.i,sc==="all"?"move":"only"))}
+    return true;
+  }
   let t=MD.t;
   if(from===to){
     if(!t){snack("Δεν βρήκα ώρα για αυτή τη θέση. Βάλε ώρα σε ένα γειτονικό βήμα.");return false}
@@ -1389,29 +1419,53 @@ function mdDrop(){
     return true;
   }
   if(!t)t=b.t;   /* empty day: keep its own time */
-  if(b.date)doMove(b,from,to,t,"all");else{render(false);askCross(b,from,to,t)}
+  if(b.date)doMove(b,from,to,t,"all");else{render(false);askCross(b,from,to,t,sc=>{if(sc==="all")doMove(b,from,to,t,"all");else copyOnce(b,from,to,t)})}
   return true;
 }
-/* Weekly step dropped on another day: move the weekly row, or leave it and add a one-off copy there. */
-function askCross(b,from,to,t){
-  const wd=parseKey(to).getDay(),lab=dateLabel(to).replace(/^Σήμερα$/,"σήμερα").replace(/^Αύριο$/,"αύριο");
+/* Weekly step dropped on another day: move the weekly row (every week), or this time only (a one-off
+   there, and this day's one is marked skipped). go("all"|"only"). */
+function askCross(b,from,to,t,go){
+  const wd=parseKey(to).getDay(),wf=parseKey(from).getDay(),lab=dateLabel(to).replace(/^Σήμερα$/,"σήμερα").replace(/^Αύριο$/,"αύριο"),flab=dateLabel(from).replace(/^Σήμερα$/,"σήμερα").replace(/^Αύριο$/,"αύριο");
   openSheet('<div class="sheet glass"><div class="grab"></div><div class="edtop"><button class="txtbtn tap" data-e="close">Άκυρο</button><div class="ttl">Μετακίνηση</div><span></span></div><div class="edbody">'+
-    '<p class="hint"><b>«'+esc(b.n)+'»</b> → '+esc(lab)+(t?' '+esc(t):'')+'<br>Είναι εβδομαδιαίο βήμα ('+DAYS[parseKey(from).getDay()]+').</p>'+
-    '<div class="acts" style="flex-direction:column"><button class="rowbtn tap" data-sc="all">Κάθε '+DAYS[wd]+'<small style="display:block;opacity:.6;font-size:12px">φεύγει από '+DAYS[parseKey(from).getDay()]+' όλες τις εβδομάδες</small></button>'+
-    '<button class="rowbtn tap" data-sc="copy">Αντίγραφο μόνο '+esc(lab)+'<small style="display:block;opacity:.6;font-size:12px">η '+DAYS[parseKey(from).getDay()]+' μένει όπως είναι</small></button></div></div></div>');
+    '<p class="hint"><b>«'+esc(b.n)+'»</b> → '+esc(lab)+(t&&clockT(t)?' '+esc(t):'')+'<br>Είναι εβδομαδιαίο βήμα ('+DAYS[wf]+').</p>'+
+    '<div class="acts" style="flex-direction:column"><button class="rowbtn tap" data-sc="only">Μόνο '+esc(lab)+'<small style="display:block;opacity:.6;font-size:12px">'+esc(flab)+' σημειώνεται ως παράλειψη· οι άλλες εβδομάδες μένουν ίδιες</small></button>'+
+    '<button class="rowbtn tap" data-sc="all">Κάθε '+DAYS[wd]+'<small style="display:block;opacity:.6;font-size:12px">φεύγει από '+DAYS[wf]+' όλες τις εβδομάδες</small></button></div></div></div>');
   HOST.onclick=e=>{if(e.target===ed){closeEd();return}
-    const x=e.target.closest("[data-sc]");if(x){closeEd();if(x.dataset.sc==="all")doMove(b,from,to,t,"all");else copyOnce(b,from,to,t);return}
+    const x=e.target.closest("[data-sc]");if(x){closeEd();go(x.dataset.sc);return}
     if(e.target.closest("[data-e=close]"))closeEd()};
 }
-/* one-off copy of b (and the steps nested in it) on date `to`, at time t */
+/* This time only: b (with its nested steps) as a one-off on `to` at time t; its occurrence on `from` is skipped. */
 function copyOnce(b,from,to,t){
-  const wd=parseKey(to).getDay(),sn=snap([to]),kids=kidsOf(b,from),ow=windows(planDay(from))[b.id];
+  const wd=parseKey(to).getDay(),sn=snap([to,from]),kids=kidsOf(b,from),ow=windows(planDay(from))[b.id],evs=[];
   const d=ow&&!ow.untimed&&clockT(t)&&clockT(b.t)?dm(parseT(t).a)-ow.s:0;
-  const tg=cloneBlock(b,{date:to,weekday:wd,replaces:null,t});S.blocks.push(tg);placeByTime(tg);
-  kids.forEach(k=>{const c=cloneBlock(k,{date:to,weekday:wd,replaces:null,t:shiftT(k.t,d)});S.blocks.push(c);placeByTime(c)});
+  const tg=cloneBlock(b,{date:to,weekday:wd,replaces:null,t});S.blocks.push(tg);placeByTime(tg);evs.push(skipOn(b,from));
+  kids.forEach(k=>{if(k.date){k.date=to;k.weekday=wd;k.replaces=null;k.t=shiftT(k.t,d);placeByTime(k)}
+    else{const c=cloneBlock(k,{date:to,weekday:wd,replaces:null,t:shiftT(k.t,d)});S.blocks.push(c);placeByTime(c);evs.push(skipOn(k,from))}});
   saveDays(sn.keys);render(false);flash(tg.id);buzz([10,40,14]);
   const cl=clashOf(tg,to);
-  snack("Αντίγραφο · "+dateLabel(to)+(t?" · "+t:"")+(cl.length?" · ⚠ πέφτει πάνω σε «"+cl.map(x=>x.n).join("», «")+"»":""),()=>restore(sn),cl.length?9000:0);
+  snack("Μόνο "+dateLabel(to)+(t&&clockT(t)?" · "+t:"")+(cl.length?" · ⚠ πέφτει πάνω σε «"+cl.map(x=>x.n).join("», «")+"»":""),()=>{restore(sn);evs.forEach(unskip)},cl.length?9000:0);
+}
+/* ---------- edge zones while dragging: Διαγραφή (left) and Επόμενη μέρα (right) ---------- */
+const ZN={};
+["del","next"].forEach(k=>{const z=document.createElement("div");z.className="zone "+k;z.innerHTML=k==="del"?'<span>🗑 Διαγραφή</span>':'<span>Επόμενη μέρα →</span>';document.body.appendChild(z);ZN[k]=z});
+function zoneDrop(b,from,zone){
+  if(zone==="del"){
+    const lab=dateLabel(from).replace(/^Σήμερα$/,"σήμερα").replace(/^Αύριο$/,"αύριο");
+    const delRow=()=>{const g=gk(b),sn=snap([g]);S.blocks=S.blocks.filter(x=>x.id!==b.id);saveDays([g],[b.id]);render(false);buzz([10,30,10]);snack("Διαγράφηκε: "+b.n,()=>restore(sn))};
+    if(b.date){delRow();return}
+    render(false);
+    openSheet('<div class="sheet glass"><div class="grab"></div><div class="edtop"><button class="txtbtn tap" data-e="close">Άκυρο</button><div class="ttl">Διαγραφή</div><span></span></div><div class="edbody">'+
+      '<p class="hint"><b>«'+esc(b.n)+'»</b> είναι εβδομαδιαίο βήμα.</p><div class="acts" style="flex-direction:column"><button class="rowbtn tap" data-sc="only">Μόνο '+esc(lab)+'<small style="display:block;opacity:.6;font-size:12px">σημειώνεται ως παράλειψη</small></button>'+
+      '<button class="rowbtn del tap" data-sc="all">Κάθε '+DAYS[parseKey(from).getDay()]+'<small style="display:block;opacity:.6;font-size:12px">σβήνεται από το εβδομαδιαίο πρόγραμμα</small></button></div></div></div>');
+    HOST.onclick=e=>{if(e.target===ed){closeEd();return}
+      const x=e.target.closest("[data-sc]");if(x){closeEd();if(x.dataset.sc==="all")delRow();else{const ev=skipOn(b,from);render(false);buzz(8);snack("Παράλειψη · "+lab,()=>{unskip(ev);render(false)})}return}
+      if(e.target.closest("[data-e=close]"))closeEd()};
+    return;
+  }
+  const to=key(addDays(parseKey(from),1)),timed=clockT(b.t);
+  if(b.date){if(timed)doMove(b,from,to,b.t,"all");else reorderTo(b,from,to,0,"move");return}
+  render(false);
+  askCross(b,from,to,b.t,sc=>{if(timed){if(sc==="all")doMove(b,from,to,b.t,"all");else copyOnce(b,from,to,b.t)}else reorderTo(b,from,to,0,sc==="all"?"move":"only")});
 }
 root.addEventListener("pointerdown",e=>{
   if(isDesk()||S.view!=="week"||MD.on||(e.pointerType==="mouse"&&e.button!==0))return;
@@ -1666,7 +1720,7 @@ function dateLabel(dk){const d=parseKey(dk),diff=Math.round((d-today())/864e5);r
 function openBlock(id,pre,focus){
   pre=pre||{};
   const ex=id?S.blocks.find(x=>x.id===id):null; if(id&&!ex) return;
-  const b=ex||{id:null,weekday:pre.date?parseKey(pre.date).getDay():(pre.weekday!=null?+pre.weekday:today().getDay()),date:pre.date||null,t:pre.t||"",n:"",h:"",tag:"other",list:null,deadline:null,remind_min:null,replaces:null,nested:false};
+  const b=ex||{id:null,weekday:pre.date?parseKey(pre.date).getDay():(pre.weekday!=null?+pre.weekday:today().getDay()),date:pre.date||null,t:pre.t||"",n:pre.n||"",h:"",tag:pre.n?guessTag(pre.n):"other",list:null,deadline:null,remind_min:null,replaces:null,nested:false};
   let nest=!!b.nested,tag=b.tag||"other",tagTouched=!!id,once=!!b.date,nd=+b.weekday,ndate=b.date||pre.ndate||key(nextDateFor(b.weekday)),rem=(b.remind_min||[]).slice();
   const ln=(b.list||[]).length,more=b.h||ln||b.deadline||(b.remind_min&&b.remind_min.length);
   const sum=more?esc([b.h?b.h.slice(0,46)+(b.h.length>46?"…":""):"",ln?ln+" στη λίστα":"",b.deadline?"προθεσμία "+fmtDL(b.deadline):"",b.remind_min&&b.remind_min.length?"🔔 "+b.remind_min.slice().sort((x,y)=>y-x).map(x=>x+"'").join(", ")+(b.deadline?"":" πριν την έναρξη"):""].filter(Boolean).join(" · ")):"Περιγραφή, λίστα, προθεσμία, υπενθύμιση";
@@ -1694,6 +1748,12 @@ function openBlock(id,pre,focus){
   HOST.querySelectorAll(".morebd textarea").forEach(x=>x.addEventListener("input",()=>grow(x)));
   if(!id) fn.addEventListener("input",()=>{if(tagTouched)return;tag=guessTag(fn.value);HOST.querySelectorAll("[data-tag]").forEach(x=>x.classList.toggle("on",x.dataset.tag===tag))});
   fn.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();save()}});
+  if(!id) fn.addEventListener("paste",e=>{const l=parseList((e.clipboardData||window.clipboardData).getData("text"));if(!l)return;e.preventDefault();
+    if(once){const dv=q("#fdate");if(dv&&dv.value)ndate=dv.value}
+    const g=once?ndate:nd,sn=snap([g,once?parseKey(ndate).getDay():nd]);let prev=null;
+    l.forEach(x=>{const nb={id:uuid(),user_id:uid(),weekday:once?parseKey(ndate).getDay():nd,date:once?ndate:null,pos:0,t:x.t,n:x.n,h:"",tag:guessTag(x.n),list:null,deadline:null,remind_min:null,replaces:null,nested:false};S.blocks.push(nb);
+      if(clockT(x.t)||!once)placeByTime(nb);else{const L=planDay(ndate),w=windows(L),top=L.filter(y=>!w[y.id].in&&y.id!==nb.id);placeAt(nb,ndate,prev?top.findIndex(y=>y.id===prev.id)+1:top.length);prev=nb}});
+    saveDays(sn.keys);closeEd();render(false);buzz([10,40,14]);snack("Προστέθηκαν "+l.length+" · "+(once?dateLabel(ndate):"κάθε "+DAYS[nd]),()=>restore(sn))});
   function save(){
     const og=id?gk(b):null,oldT=b.t;
     if(once){const dv=q("#fdate");if(dv&&dv.value)ndate=dv.value}
@@ -1728,9 +1788,6 @@ function openBlock(id,pre,focus){
     if(a==="del"){const sn=snap([g]);S.blocks=S.blocks.filter(x=>x.id!==id);saveDays([g],[id]);closeEd();render(false);buzz([10,30,10]);snack("Διαγράφηκε: "+b.n,()=>restore(sn));return}
   };
 }
-/* ---------- + on mobile: one question per screen ----------
-   Τι; → Πότε; → Τι ώρα; → Προθεσμία; → (Πού να μπει; only on a clash). */
-const qf=document.createElement("div");qf.id="qf";document.body.appendChild(qf);
 function clashes(list,t){
   const st=parseT(t);if(st.mode==="label"||st.empty)return {hits:[]};
   const w=windows(list),s=dm(st.a),top=list.filter(b=>!w[b.id].untimed&&!w[b.id].in);let e;
@@ -1738,103 +1795,63 @@ function clashes(list,t){
   else{const nx=top.map(b=>w[b.id]).filter(v=>v.s>s).map(v=>v.s);e=nx.length?Math.max(s+30,Math.min(...nx)):s+60}
   return {hits:top.filter(b=>{const v=w[b.id];return s<v.e&&v.s<e}),s,w};
 }
-function addFlow(){
-  const Q={n:"",tag:"other",tagT:false,once:true,date:key(today()),wds:new Set([today().getDay()]),t:"",dl:"",dlt:"",rem:[],step:0};
-  const targets=()=>Q.once?[{k:Q.date,list:planDay(Q.date)}]:[...Q.wds].sort((a,b)=>ORDER.indexOf(a)-ORDER.indexOf(b)).map(wd=>({k:wd,list:dayBlocks(wd)}));
-  const clashAll=()=>targets().map(x=>Object.assign(x,clashes(x.list,Q.t))).filter(x=>x.hits.length);
-  /* «Μέσα σε»: offered when the new step starts inside every step it clashes with */
-  const canNest=cs=>cs.every(x=>x.hits.some(h=>{const v=x.w[h.id];return v.s<=x.s&&x.s<v.ve}));
-  const steps=()=>["what","when","time","dl"].concat(clashAll().length?["place"]:[]);
-  const tomorrow=key(addDays(today(),1));
-  let tp=null;
-  function draw(){
-    const st=steps(),cur=st[Q.step],last=Q.step===st.length-1;
-    let b='';
-    if(cur==="what") b='<h2>Τι;</h2><input id="qn" class="qbig" value="'+esc(Q.n)+'" placeholder="π.χ. Τηλέφωνο στη ΔΕΗ" enterkeyhint="next" autocomplete="off" autocapitalize="sentences"><div class="qtags">'+Object.keys(TAGS).map(k=>'<button class="tap'+(k===Q.tag?" on":"")+'" data-tag="'+k+'"><i style="background:'+TAGS[k][1]+'"></i>'+TAGS[k][0]+'</button>').join("")+'</div>';
-    if(cur==="when") b='<h2>Πότε;</h2><div class="seg mini"><button class="tap'+(Q.once?" on":"")+'" data-once="1">Μία φορά</button><button class="tap'+(Q.once?"":" on")+'" data-once="0">Κάθε εβδομάδα</button></div>'+
-      (Q.once?'<div class="qchips"><button class="chipb tap'+(Q.date===key(today())?" on":"")+'" data-date="'+key(today())+'">Σήμερα</button><button class="chipb tap'+(Q.date===tomorrow?" on":"")+'" data-date="'+tomorrow+'">Αύριο</button><label class="chipb qdate'+(Q.date!==key(today())&&Q.date!==tomorrow?" on":"")+'">'+(Q.date!==key(today())&&Q.date!==tomorrow?dateLabel(Q.date):"Άλλη μέρα")+'<input type="date" id="qd" value="'+Q.date+'" min="'+key(today())+'"></label></div>'
-      :'<div class="daysel">'+ORDER.map(x=>'<button class="tap'+(Q.wds.has(x)?" on":"")+'" data-wd="'+x+'">'+SHORT[x]+'</button>').join("")+'</div>');
-    if(cur==="time") b='<h2>Τι ώρα;</h2><div class="tp" id="qtp"></div>';
-    if(cur==="dl") b='<h2>Προθεσμία;</h2><button class="qskip tap" data-q="nodl">Παράλειψη · χωρίς προθεσμία</button>'+
-      '<div class="qchips"><button class="chipb tap'+(Q.dl===key(today())?" on":"")+'" data-dl="'+key(today())+'">Σήμερα</button><button class="chipb tap'+(Q.dl===tomorrow?" on":"")+'" data-dl="'+tomorrow+'">Αύριο</button><label class="chipb qdate'+(Q.dl&&Q.dl!==key(today())&&Q.dl!==tomorrow?" on":"")+'">'+(Q.dl&&Q.dl!==key(today())&&Q.dl!==tomorrow?dateLabel(Q.dl):"Άλλη μέρα")+'<input type="date" id="qdl" value="'+(Q.dl||key(today()))+'" min="'+key(today())+'"></label></div>'+
-      (Q.dl?'<div class="lbl">Ώρα</div><input type="time" id="qdt" class="qtime" value="'+(Q.dlt||"18:00")+'"><div class="lbl">Υπενθύμιση</div><div class="qchips">'+REM.map(r=>'<button class="chipb tap'+(Q.rem.indexOf(r[0])>=0?" on":"")+'" data-rem="'+r[0]+'">'+r[1]+'</button>').join("")+'<button class="chipb tap'+(Q.rem.length?"":" on")+'" data-rem="0">Καμία</button></div>':'');
-    if(cur==="place"){const cs=clashAll(),names=[...new Set(cs.flatMap(x=>x.hits.map(h=>h.n)))],one=names.length===1?names[0]:null,X=one?"«"+esc(one)+"»":"";
-      b='<h2>Πού να μπει;</h2><p class="qsub">Πέφτει πάνω σε:</p><div class="agenda">'+cs.map(x=>x.hits.map(h=>'<div class="arow"><i style="background:'+tagc(h.tag)+'"></i><span>'+esc(h.n)+'</span><small>'+(typeof x.k==="number"?SHORT[x.k]+" · ":"")+esc(h.t)+'</small></div>').join("")).join("")+'</div>'+
-      '<div class="qopts">'+(canNest(cs)?'<button class="rowbtn tap in" data-place="inside">Μέσα σε '+(X||"αυτό")+'<small>σαν διάλειμμα, δεν το διακόπτει</small></button>':'')+'<button class="rowbtn tap" data-place="before">Πριν από '+(X||"αυτό")+'</button><button class="rowbtn tap" data-place="after">Μετά από '+(X||"αυτό")+'</button><button class="rowbtn tap" data-place="replace">Αντικατάστασε '+(X?"το "+X:"αυτό")+'</button><button class="rowbtn tap" data-place="both">Και τα δύο</button></div>'}
-    qf.innerHTML='<div class="qin glass"><div class="qtop"><button class="ibtn tap" data-q="close" aria-label="Κλείσιμο">✕</button><div class="qdots">'+st.map((_,i)=>'<i class="'+(i<Q.step?"d":i===Q.step?"c":"")+'"></i>').join("")+'</div><span style="width:42px"></span></div>'+
-      '<div class="qbody" data-step="'+cur+'">'+b+'</div>'+
-      (cur==="place"?'<div class="qfoot"><button class="btn skip tap" data-q="back">Πίσω</button></div>':'<div class="qfoot">'+(Q.step?'<button class="btn skip tap" data-q="back">Πίσω</button>':'')+'<button class="btn done tap" data-q="next">'+(last?"Προσθήκη":"Επόμενο")+'</button></div>')+'</div>';
-    if(cur==="what"){const i=qf.querySelector("#qn");i.focus();i.setSelectionRange(i.value.length,i.value.length);
-      i.addEventListener("input",()=>{Q.n=i.value;if(!Q.tagT){Q.tag=guessTag(Q.n);qf.querySelectorAll("[data-tag]").forEach(x=>x.classList.toggle("on",x.dataset.tag===Q.tag))}})}
-    if(cur==="time") tp=timePicker(qf.querySelector("#qtp"),Q.t,v=>{Q.t=v;const nb=qf.querySelector('[data-q="next"]');if(nb)nb.textContent=steps().length-1===Q.step?"Προσθήκη":"Επόμενο";drawDots()});
-    const qd=qf.querySelector("#qd");if(qd)qd.addEventListener("change",()=>{if(qd.value){Q.date=qd.value;draw()}});
-    const qdl=qf.querySelector("#qdl");if(qdl)qdl.addEventListener("change",()=>{if(qdl.value){Q.dl=qdl.value;draw()}});
-    const qdt=qf.querySelector("#qdt");if(qdt)qdt.addEventListener("input",()=>{Q.dlt=qdt.value});
+/* timed top-level steps in a day whose windows overlap another's */
+function clashCount(list){const w=windows(list),top=list.filter(b=>!w[b.id].untimed&&!w[b.id].in);
+  return top.filter(a=>top.some(b=>b!==a&&w[a.id].s<w[b.id].e&&w[b.id].s<w[a.id].e)).length}
+/* Pasted list → steps. One per line; bullets, numbers and [ ] are dropped. A time at the start or the
+   end of a line ("18:00 Γυμναστήριο", "Ντους ~19.30", "09:00-17:00 Δουλειά") becomes the step's time
+   in the picker's shapes; a line without one is untimed. null if the text has fewer than two lines. */
+function parseList(text){
+  const T="(~)?\\s*([01]?\\d|2[0-3])[:.]([0-5]\\d)(?:\\s*[-–—]\\s*([01]?\\d|2[0-3])[:.]([0-5]\\d))?";
+  const z=x=>String(+x).padStart(2,"0"),fmt=m=>(m[1]?"~":"")+z(m[2])+":"+m[3]+(m[4]?"–"+z(m[4])+":"+m[5]:"");
+  const out=String(text||"").split(/\r?\n/).map(l=>l.replace(/^\s*(?:[-–—*•·▪◦]|\d+[.)]|\[[ xX✓]?\])\s*/,"").trim()).filter(Boolean).map(l=>{
+    let m=l.match(new RegExp("^"+T+"\\s*[-–—:·|,]?\\s+(.+)$"));if(m)return{t:fmt(m),n:m[6].trim()};
+    m=l.match(new RegExp("^(.+?)\\s*[-–—:·|,(]?\\s+"+T+"\\)?$"));if(m)return{t:fmt(m.slice(1)),n:m[1].trim()};
+    return{t:"",n:l}}).filter(x=>x.n);
+  return out.length>1?out:null;
+}
+/* ---------- + : quick add, one screen ----------
+   Type and Enter: the step is added and the field clears for the next one (the sheet stays).
+   Day = Σήμερα / Αύριο / a date; time is optional. Without a time it goes into the order:
+   today right after the current step, another day at its start, and each next one after the
+   previous. A pasted list (one per line) adds them all. «Περισσότερα» = the full editor. */
+function quickAdd(){
+  const td=key(today()),tm=key(addDays(today(),1));
+  let date=td,t="",tp=null,last=null;
+  const dayChips=()=>'<button class="chipb tap'+(date===td?" on":"")+'" data-d="'+td+'">Σήμερα</button><button class="chipb tap'+(date===tm?" on":"")+'" data-d="'+tm+'">Αύριο</button><label class="chipb qdate'+(date!==td&&date!==tm?" on":"")+'">'+(date!==td&&date!==tm?dateLabel(date):"Άλλη μέρα")+'<input type="date" id="qad" value="'+date+'" min="'+td+'"></label>';
+  openSheet('<div class="sheet glass qa"><div class="grab"></div><div class="edtop"><button class="txtbtn tap" data-e="close">Κλείσιμο</button><div class="ttl">Νέο βήμα</div><button class="txtbtn strong tap" data-e="add">Προσθήκη</button></div><div class="edbody">'+
+    '<div class="r2"><input id="qan" class="big" placeholder="Τι;" enterkeyhint="done" autocomplete="off" autocapitalize="sentences">'+tbtnHtml("","qat")+'</div><div id="qatp" hidden></div>'+
+    '<div class="qchips" id="qadays">'+dayChips()+'</div>'+
+    '<p class="hint" id="qah"></p><button class="txtbtn tap qmore" data-e="more">Περισσότερα: κάθε εβδομάδα, προθεσμία, υπενθύμιση</button></div></div>',false);
+  const q=x=>HOST.querySelector(x),inp=q("#qan"),tb=q("#qat"),tpw=q("#qatp");
+  const hint=()=>{q("#qah").textContent=t?"Μπαίνει στη θέση της ώρας του.":"Χωρίς ώρα: μπαίνει "+(last&&last.date===date?"μετά το «"+last.n+"»":date===td?"αμέσως μετά από αυτό που κάνεις τώρα":"στην αρχή της μέρας")+". Μετά το σέρνεις όπου θες. Επικόλλησε λίστα για πολλά μαζί."};
+  const drawDays=()=>{q("#qadays").innerHTML=dayChips();const d=q("#qad");d.addEventListener("change",()=>{if(d.value){date=d.value;last=null;drawDays();hint()}})};
+  drawDays();hint();inp.focus();
+  tb.addEventListener("click",()=>{const open=tpw.hidden;tpw.hidden=!open;tb.classList.toggle("open",open);
+    if(open&&!tp){tpw.className="tp";tp=timePicker(tpw,t,v=>{t=v;setTbtn(tb,v);hint()})}});
+  /* slot for an untimed step on `date`: after the last one added here, else after today's current step, else first */
+  function slot(){const L=planDay(date),w=windows(L),top=L.filter(x=>!w[x.id].in);
+    if(last&&last.date===date){const k=top.findIndex(x=>x.id===last.id);if(k>=0)return k+1}
+    if(date===td){const d=dayState(td),c=d.list[d.cur];return c?top.findIndex(x=>x.id===c.id)+1:top.length}
+    return 0}
+  function one(n,tt){const nb={id:uuid(),user_id:uid(),weekday:parseKey(date).getDay(),date,pos:0,t:tt,n,h:"",tag:guessTag(n),list:null,deadline:null,remind_min:null,replaces:null,nested:false};
+    if(clockT(tt)){S.blocks.push(nb);placeByTime(nb)}else{const i=slot();S.blocks.push(nb);placeAt(nb,date,i);last=nb}return nb}
+  function add(items){
+    const sn=snap([date,parseKey(date).getDay()]),made=items.map(x=>one(x.n,x.t));
+    saveDays(sn.keys);render(false);flash(made[made.length-1].id);buzz([10,40,14]);
+    const cl=made.reduce((k,b)=>k+(clockT(b.t)&&clashOf(b,date).length?1:0),0);
+    snack((made.length>1?"Προστέθηκαν "+made.length:"Προστέθηκε «"+made[0].n+"»")+" · "+dateLabel(date)+(made.length===1&&made[0].t?" "+made[0].t:"")+(cl?" · ⚠ πέφτει πάνω σε άλλο":""),()=>{restore(sn);last=null;hint()},cl?9000:0);
+    inp.value="";t="";setTbtn(tb,"");if(tp){tpw.hidden=true;tb.classList.remove("open");tp=null;tpw.innerHTML=""}hint();inp.focus();
   }
-  function drawDots(){const st=steps(),d=qf.querySelector(".qdots");if(d)d.innerHTML=st.map((_,i)=>'<i class="'+(i<Q.step?"d":i===Q.step?"c":"")+'"></i>').join("")}
-  function go(n){const b=qf.querySelector(".qbody");Q.step=n;if(b){b.classList.add("qout");setTimeout(draw,140)}else draw();buzz(5)}
-  function next(){
-    const cur=steps()[Q.step];
-    if(cur==="what"&&!Q.n.trim()){const i=qf.querySelector("#qn");i.animate([{transform:"translateX(0)"},{transform:"translateX(8px)"},{transform:"translateX(-6px)"},{transform:"translateX(0)"}],{duration:300});i.focus();return}
-    if(cur==="when"&&!Q.once&&!Q.wds.size){toast("Διάλεξε τουλάχιστον μία μέρα");return}
-    if(cur==="dl"&&Q.dl&&!Q.dlt)Q.dlt="18:00";
-    if(Q.step>=steps().length-1){finish("both");return}
-    go(Q.step+1);
-  }
-  function close(){qf.classList.remove("open");qf.innerHTML="";qf.onclick=null;document.removeEventListener("keydown",onKey)}
-  function finish(place){
-    const ts=targets(),keys=ts.map(x=>x.k),cs=place==="both"||place==="inside"?[]:clashAll(),sn=snap(keys),del=[];
-    let dl=null;if(Q.dl){dl=new Date(Q.dl+"T"+(Q.dlt||"18:00")).toISOString()}
-    let firstId=null;
-    ts.forEach(x=>{
-      const hits=(cs.find(c=>c.k===x.k)||{hits:[]}).hits;
-      const nb={id:uuid(),user_id:uid(),weekday:Q.once?parseKey(Q.date).getDay():x.k,date:Q.once?Q.date:null,pos:0,t:Q.t,n:Q.n.trim(),h:"",tag:Q.tag,list:null,deadline:dl,remind_min:dl&&Q.rem.length?Q.rem.slice().sort((a,b)=>b-a):null,replaces:null,nested:place==="inside"};
-      firstId=firstId||nb.id;
-      let L=x.list.slice(),idx=null;
-      if(hits.length&&place!=="both"){
-        const ix=hits.map(h=>L.indexOf(h));
-        idx=place==="after"?Math.max(...ix)+1:Math.min(...ix);
-        /* Replace: a one-off stands in for a weekly row on its date (replaces),
-           so the template is untouched; anything else is deleted (undoable).
-           Only one weekly row per one-off can be stood in for. */
-        if(place==="replace"){
-          hits.forEach(h=>{ if(Q.once&&!h.date&&!nb.replaces) nb.replaces=h.id; else if(!(Q.once&&!h.date)) del.push(h.id); });
-          L=L.filter(h=>del.indexOf(h.id)<0&&h.id!==nb.replaces);
-        }
-      }
-      S.blocks=S.blocks.filter(b=>del.indexOf(b.id)<0);
-      if(Q.once){
-        if(idx==null){S.blocks.push(nb);placeByTime(nb)}
-        else{nb.pos=L.slice(0,idx).filter(b=>!b.date&&b.id!==nb.replaces).length;S.blocks.push(nb)}
-      }else{
-        const rows=dayBlocks(x.k);if(idx==null)idx=timeIndex(rows,nb.t);else idx=Math.min(idx,rows.length);
-        rows.splice(idx,0,nb);rows.forEach((r,i)=>r.pos=i);S.blocks.push(nb);
-      }
-    });
-    saveDays(keys,del);
-    const r=qf.querySelector(".qin").getBoundingClientRect();ripple(r.left+r.width/2,r.top+r.height/2,360,1.3);buzz([10,40,14]);
-    qf.classList.add("closing");setTimeout(()=>{qf.classList.remove("closing");close();render(false);flash(firstId)},260);
-    snack("Προστέθηκε"+(Q.once?" · "+dateLabel(Q.date):""),()=>restore(sn));
-    if(dl&&Q.rem.length) setTimeout(afterReminder,400);
-  }
-  function onKey(e){if(e.key==="Escape"){close();return}if(e.key==="Enter"&&!(e.target&&e.target.tagName==="TEXTAREA")){e.preventDefault();if(steps()[Q.step]!=="place")next()}}
-  qf.onclick=e=>{
-    const t=e.target.closest("[data-q],[data-tag],[data-once],[data-date],[data-wd],[data-dl],[data-rem],[data-place]");if(!t)return;
-    const d=t.dataset;
-    if(d.q==="close"){close();return}
-    if(d.q==="back"){if(Q.step)go(Q.step-1);return}
-    if(d.q==="next"){next();return}
-    if(d.q==="nodl"){Q.dl="";Q.dlt="";Q.rem=[];if(Q.step>=steps().length-1)finish("both");else go(Q.step+1);return}
-    if(d.tag){Q.tag=d.tag;Q.tagT=true;qf.querySelectorAll("[data-tag]").forEach(x=>x.classList.toggle("on",x===t));return}
-    if(d.once!=null){Q.once=d.once==="1";draw();return}
-    if(d.date){Q.date=d.date;draw();return}
-    if(d.wd!=null){const w=+d.wd;if(Q.wds.has(w))Q.wds.delete(w);else Q.wds.add(w);t.classList.toggle("on",Q.wds.has(w));buzz(4);return}
-    if(d.dl){Q.dl=d.dl;draw();return}
-    if(d.rem!=null){const v=+d.rem;if(!v)Q.rem=[];else{const i=Q.rem.indexOf(v);if(i>=0)Q.rem.splice(i,1);else Q.rem.push(v)}draw();buzz(4);return}
-    if(d.place){finish(d.place);return}
-  };
-  document.addEventListener("keydown",onKey);
-  qf.classList.add("open");draw();
+  function submit(){const n=inp.value.trim();if(!n){inp.animate([{transform:"translateX(0)"},{transform:"translateX(8px)"},{transform:"translateX(-6px)"},{transform:"translateX(0)"}],{duration:300});inp.focus();return}add([{n,t}])}
+  inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();submit()}});
+  inp.addEventListener("paste",e=>{const l=parseList((e.clipboardData||window.clipboardData).getData("text"));if(!l)return;e.preventDefault();add(l)});
+  HOST.onclick=e=>{if(e.target===ed){closeEd();return}
+    const d=e.target.closest("[data-d]");if(d){date=d.dataset.d;last=null;drawDays();hint();buzz(4);inp.focus();return}
+    const x=e.target.closest("[data-e]");if(!x)return;
+    if(x.dataset.e==="close")closeEd();
+    else if(x.dataset.e==="add")submit();
+    else if(x.dataset.e==="more"){const n=inp.value.trim(),tt=t;closeEd();openBlock(null,{date,ndate:date,t:tt,n},true)}};
 }
 /* ---------- deadline reminders (web push) ----------
    Server side: tora-reminders edge function + pg_cron, see supabase/README.md.
